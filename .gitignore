@@ -3,8 +3,8 @@
 ##
 ## Get latest from https://github.com/github/gitignore/blob/master/VisualStudio.gitignore
 
-.\Replays
-.\build-solution-x64
+Replays/
+build-solution-x64/
 PlayLocalMatch.bat
 
 
