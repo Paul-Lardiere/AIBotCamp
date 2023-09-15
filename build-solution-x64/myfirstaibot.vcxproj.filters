@@ -1,0 +1,69 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="D:\IA\AIBotcamp\AIBot.cpp">
+      <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\IA\AIBotcamp\Logger.cpp">
+      <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\IA\AIBotcamp\MyBotLogic.cpp">
+      <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\IA\AIBotcamp\dllmain.cpp">
+      <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\IA\AIBotcamp\Interop_API.cpp">
+      <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\IA\AIBotcamp\stdafx.cpp">
+      <Filter>Sources</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="D:\IA\AIBotcamp\AIBot.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\IA\AIBotcamp\BotLogicIF.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\IA\AIBotcamp\ConfigData.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\IA\AIBotcamp\Globals.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\IA\AIBotcamp\InitData.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\IA\AIBotcamp\Logger.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\IA\AIBotcamp\MyBotLogic.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\IA\AIBotcamp\TurnData.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\IA\AIBotcamp\Interop_API.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\IA\AIBotcamp\stdafx.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\IA\AIBotcamp\targetver.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="D:\IA\AIBotcamp\CMakeLists.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Headers">
+      <UniqueIdentifier>{19788C2D-86AC-3A7E-89FD-D91CC6B1DFD2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Sources">
+      <UniqueIdentifier>{97D2843B-C2C8-31FC-B394-DC2006FA29BF}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>
