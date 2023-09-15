@@ -2,6 +2,7 @@
 
 #include "BotLogicIF.h"
 #include "Logger.h"
+#include <Graph.h>
 
 #ifdef _DEBUG
 #define BOT_LOGIC_DEBUG
@@ -20,6 +21,8 @@ struct STurnData;
 //This class must be instantiated in main.cpp.
 class MyBotLogic : public virtual BotLogicIF
 {
+private:
+	Graph& _graph = Graph::get();
 public:
 	MyBotLogic();
 	virtual ~MyBotLogic();
@@ -27,6 +30,8 @@ public:
 	virtual void Configure(const SConfigData& _configData);
 	virtual void Init(const SInitData& _initData);
 	virtual void GetTurnOrders(const STurnData& _turnData, std::list<SOrder>& _orders);
+
+
 
 protected:
 	Logger mLogger;

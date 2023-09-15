@@ -11,6 +11,8 @@ enum EHexCellDirection
 {
 	W, NW, NE, E, SE, SW, CENTER
 };
+static const EHexCellDirection allDirection[] = { W, NW, NE, E, SE, SW };
+static const EHexCellDirection allDirectionReversed[] = { E, SE ,SW, W, NW, NE };
 
 enum EObjectType
 {

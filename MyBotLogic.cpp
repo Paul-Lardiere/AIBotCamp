@@ -29,7 +29,8 @@ void MyBotLogic::Configure(const SConfigData& _configData)
 void MyBotLogic::Init(const SInitData& _initData)
 {
 	BOT_LOGIC_LOG(mLogger, "Init", true);
-	
+	_graph.InitGraph(_initData.tileInfoArraySize, _initData.tileInfoArray, _initData.objectInfoArray, _initData.objectInfoArraySize);
+	BOT_LOGIC_LOG(mLogger, _graph.printGraph(), true);
 	//Write Code Here
 }
 
