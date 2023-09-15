@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <CustomBuild Include="D:\IA\AIBotcamp\build-solution-x64\CMakeFiles\e6725c76896cece587b70b5804f6cf1d\generate.stamp.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="CMake Rules">
+      <UniqueIdentifier>{B99F43AC-AB98-3669-8C12-BA0F37FF7A92}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>
