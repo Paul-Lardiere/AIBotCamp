@@ -4,14 +4,17 @@
 #include <map>
 class Node
 {
-
+	using coordinates = std::pair<int, int>;
 	using adjencyList = std::map<EHexCellDirection, Node*>;
 
 private:
 
-	int _distToGoal = 100;
 	STileInfo _tile;
 	adjencyList _adjencyList;
+
+	// cost so far du noeud pour arriver au goal qui se trouve au coordoonées en clé
+	std::map<coordinates, float> _cost_so_far;
+	std::map<coordinates, float> _heuristic;
 	bool occupied = false;
 
 public:
@@ -27,7 +30,11 @@ public:
 
 	Node* getNodeDirection(EHexCellDirection direction);
 	STileInfo getTileInfo() { return _tile; };
-	void setDistToGoal(int distToGoal) { _distToGoal = distToGoal; };
-	int getDistToGoal() { return _distToGoal; };
+
+	void setCost_so_far(coordinates coordinate, float cost_so_far) { _cost_so_far.insert({coordinate, cost_so_far}); };
+	float getCost_so_far(coordinates coordinate) { return _cost_so_far.at(coordinate); };
+
+	void setHeuristic(coordinates coordinate, float heuristic) { _heuristic.insert({ coordinate, heuristic }); };
+	float getHeuristic(coordinates coordinate) { return _heuristic.at(coordinate); };
 
 };

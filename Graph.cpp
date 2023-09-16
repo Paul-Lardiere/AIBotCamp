@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <format>
 
+
 /// <summary>
 /// Construit le graph a partir de de la liste de TileInfo on ignornant les tile forbidden
 /// </summary>
@@ -115,18 +116,14 @@ bool Graph::isInitialized(coordinates coordinates)
 }
 
 
-void Graph::resetDist()
-{
-	for (auto it = _nodes.begin(); it != _nodes.end(); it++)
-		it->second->setDistToGoal(100);
-}
+
 
 std::string Graph::printGraph()
 {
 	std::string ret;
 	for (auto it = _nodes.cbegin(); it != _nodes.cend(); ++it)
 	{
-		ret += std::format("Node ({},{}) :  {}\n", it->second->getTileInfo().q, it->second->getTileInfo().r, it->second->getDistToGoal());
+		ret += std::format("Node ({},{}) :\n", it->second->getTileInfo().q, it->second->getTileInfo().r);
 		for (auto it2 = it->second->getAdjencyList().begin(); it2 != it->second->getAdjencyList().end(); ++it2)
 			ret += std::format("({},{}) ", it2->second->getTileInfo().q, it2->second->getTileInfo().r);
 		ret += "\n";

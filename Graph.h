@@ -4,11 +4,12 @@
 #include <string>
 #include <map>
 
-using coordinates = std::pair<int, int>;
+
 using distance_type = int;
 
 class Graph
 {
+	using coordinates = std::pair<int, int>;
 private:
 	size_t _size{};
 	std::map<coordinates, Node*> _nodes;
@@ -38,8 +39,6 @@ public:
 	~Graph();
 	const size_t getSize() { return  _size; };
 	std::map<coordinates, Node*> getNodes() { return _nodes; };
-
-	void resetDist();
 
 	std::string printGraph();
 };

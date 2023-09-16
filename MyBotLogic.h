@@ -6,6 +6,7 @@
 
 #ifdef _DEBUG
 #define BOT_LOGIC_DEBUG
+#define GLOBAL_LOGGER
 #endif
 
 #ifdef BOT_LOGIC_DEBUG
@@ -34,5 +35,11 @@ public:
 
 
 protected:
+#ifndef GLOBAL_LOGGER
 	Logger mLogger;
+#endif
 };
+
+#ifdef GLOBAL_LOGGER
+extern Logger mLogger;
+#endif
