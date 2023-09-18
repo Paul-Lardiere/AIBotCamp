@@ -50,6 +50,9 @@ public:
 	coordinates GetClosestGoalInfo(SNPCInfo npcCurrent);
 	int distanceHexCoordNpc(coordinates coordinates, SNPCInfo npcInfo);
 
+	void setOccupiedNode(coordinates coord, bool isOccupied) { _nodes[coord]->setOccupied(isOccupied); }
+	bool IsNodeOccupied(coordinates coord) { return _nodes[coord]->isOccupied(); }
+
 	std::string printGraph();
 };
 

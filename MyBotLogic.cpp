@@ -78,6 +78,7 @@ void MyBotLogic::Init(const SInitData& _initData)
 	{
 		_pathForEachNpc[npcCurrent[i].uid] = PathFinderAStar(npcCurrent[i], Heuristic{_goalForEachNpc[npcCurrent[i].uid]});
 		_pathPositionForEachNpc[npcCurrent[i].uid] = 0;
+		_graph.setOccupiedNode(coordinates{ npcCurrent[i].q, npcCurrent[i].r }, true);
 	}
 }
 
@@ -91,8 +92,37 @@ void MyBotLogic::GetTurnOrders(const STurnData& _turnData, std::list<SOrder>& _o
 		{
 			EHexCellDirection dir = _pathForEachNpc[npcCurrent[i].uid][_pathPositionForEachNpc[npcCurrent[i].uid]];
 
-			//if (MovementPossible(_turnData.npcInfoArray, _turnData.npcInfoArraySize, npcCurrent))
+			coordinates coordDest;
+			switch (dir)
 			{
+			case W:
+				coordDest = (coordinates{ npcCurrent[i].q, npcCurrent[i].r - 1});
+				break;
+			case NW:
+				coordDest = (coordinates{ npcCurrent[i].q - 1, npcCurrent[i].r });
+				break;
+			case NE:
+				coordDest = (coordinates{ npcCurrent[i].q - 1, npcCurrent[i].r + 1 });
+				break;
+			case E:
+				coordDest = (coordinates{ npcCurrent[i].q, npcCurrent[i].r + 1 });
+				break;
+			case SE:
+				coordDest = (coordinates{ npcCurrent[i].q + 1, npcCurrent[i].r });
+				break;
+			case SW:
+				coordDest = (coordinates{ npcCurrent[i].q + 1, npcCurrent[i].r - 1 });
+				break;
+			default:
+				break;
+			}
+
+			if (!_graph.IsNodeOccupied(coordDest))
+			{
+				// We free the old node
+				_graph.setOccupiedNode(coordinates{ npcCurrent[i].q, npcCurrent[i].r }, false);
+				// We go on the next node
+				_graph.setOccupiedNode(coordDest, true);
 				_pathPositionForEachNpc[npcCurrent[i].uid] += 1;
 
 				// Give the order to the npc

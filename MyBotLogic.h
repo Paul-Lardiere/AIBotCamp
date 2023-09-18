@@ -23,7 +23,7 @@ struct STurnData;
 //This class must be instantiated in main.cpp.
 class MyBotLogic : public virtual BotLogicIF
 {
-//	using coordinates = std::pair<int, int>;
+	using coordinates = std::pair<int, int>;
 private:
 	Graph& _graph = Graph::get();
 

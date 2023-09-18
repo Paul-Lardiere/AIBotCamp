@@ -16,7 +16,7 @@ private:
 	// cost so far du noeud pour arriver au goal qui se trouve au coordoonées en clé
 	std::map<coordinates, float> _cost_so_far;
 	std::map<coordinates, float> _heuristic;
-	bool occupied = false;
+	bool _occupied = false;
 
 public:
 	Node() = default;
@@ -52,6 +52,10 @@ public:
 			return _heuristic.at(coordinate) + _cost_so_far.at(coordinate); 
 		return -1;
 	}
+
+	void setOccupied(bool isOccupied) { _occupied = isOccupied; }
+	bool isOccupied() { return _occupied; }
+
 
 	bool operator==(Node node) const {
 		return ((node.getTileInfo().q == _tile.q) &&
