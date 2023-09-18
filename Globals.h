@@ -1,5 +1,8 @@
 #pragma once
 
+#include <vector>
+#include <map>
+
 enum EHexCellType
 {
 	Goal,
@@ -80,4 +83,20 @@ struct SNPCInfo
 	int q;
 	int r;
 	int visionRange;
+};
+
+struct Heuristic
+{
+	using coordinates = std::pair<int, int>;
+
+	Heuristic(coordinates end) : endTileCoordinates{ end } { }
+	coordinates endTileCoordinates;
+
+	int estimate(coordinates startcoordinates) {
+		int qdiff = endTileCoordinates.first - startcoordinates.first;
+		int rdiff = endTileCoordinates.second - startcoordinates.second;
+		int sdiff = -(qdiff + rdiff);
+
+		return (std::abs(qdiff) + abs(rdiff) + abs(sdiff)) / 2;
+	}
 };

@@ -90,6 +90,9 @@ void Graph::addNode(Node* node)
 {
 	_size++;
 	_nodes.insert({ coordinates {node->getTileInfo().q, node->getTileInfo().r}, node });
+
+	if (node->getTileInfo().type == EHexCellType::Goal)
+		_goals[{ node->getTileInfo().q, node->getTileInfo().r }] = -1;
 }
 
 /// <summary>
@@ -115,8 +118,39 @@ bool Graph::isInitialized(coordinates coordinates)
 	return _nodes.find(coordinates) != _nodes.end();
 }
 
+Graph::coordinates Graph::GetClosestGoalInfo(SNPCInfo npcCurrent)
+{
+	size_t minDist = _size;
+	int distance;
 
+	Graph::coordinates closestgoalCoordinates;
 
+	for (std::pair<Graph::coordinates, int> goal : _goals) {
+		if (goal.second == -1) // if not used by another npc
+		{
+			distance = distanceHexCoordNpc(goal.first, npcCurrent);
+			if (minDist > distance)
+			{
+				minDist = distance;
+				closestgoalCoordinates = goal.first;
+			}
+		}
+	}
+
+	// register the npc id for the closest goal
+	_goals[closestgoalCoordinates] = npcCurrent.uid;
+
+	return closestgoalCoordinates;
+}
+
+int Graph::distanceHexCoordNpc(coordinates coordinates, SNPCInfo npcInfo)
+{
+	int qdiff = coordinates.first -npcInfo.q;
+	int rdiff = coordinates.second - npcInfo.r;
+	int sdiff = -(qdiff + rdiff);
+
+	return (abs(qdiff) + abs(rdiff) + abs(sdiff)) / 2;
+}
 
 std::string Graph::printGraph()
 {
