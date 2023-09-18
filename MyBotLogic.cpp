@@ -5,6 +5,7 @@
 #include "InitData.h"
 #include "TurnData.h"
 #include <algorithm>
+#include <format>
 
 #define LOG(x) BOT_LOGIC_LOG(mLogger, x, true)
 #define LOGLOG(x) { std::stringstream ss; ss << x; LOG(ss.str().c_str()); }
@@ -66,64 +67,58 @@ void MyBotLogic::Init(const SInitData& _initData)
 
 	for (int i = 0; i < _initData.nbNPCs; i++)
 	{
-		_goalForEachNpc[npcCurrent->uid] = _graph.GetClosestGoalInfo(npcCurrent);
-		npcCurrent++;
+		_goalForEachNpc[npcCurrent[i].uid] = _graph.GetClosestGoalInfo(npcCurrent[i]);
 	}
 
 	// Reinitialisation of the NPC
 	npcCurrent = _initData.npcInfoArray;
 
-	
 	// Calculate the path for each NPC
 	for (int i = 0; i < _initData.nbNPCs; i++)
 	{
-		_pathForEachNpc[npcCurrent->uid] = PathFinderAStar(npcCurrent, Heuristic{ _goalForEachNpc[npcCurrent->uid] });
-		_pathPositionForEachNpc[npcCurrent->uid] = 0;
-		npcCurrent++;
+		_pathForEachNpc[npcCurrent[i].uid] = PathFinderAStar(npcCurrent[i], Heuristic{_goalForEachNpc[npcCurrent[i].uid]});
+		_pathPositionForEachNpc[npcCurrent[i].uid] = 0;
 	}
 }
 
 void MyBotLogic::GetTurnOrders(const STurnData& _turnData, std::list<SOrder>& _orders)
 {
-	/*
 	SNPCInfo* npcCurrent = _turnData.npcInfoArray;
 
 	for (int i = 0; i < _turnData.npcInfoArraySize; i++)
 	{
-		if (_pathPositionForEachNpc[npcCurrent->uid] < _pathForEachNpc[npcCurrent->uid].size())
+		if (_pathPositionForEachNpc[npcCurrent[i].uid] < _pathForEachNpc[npcCurrent[i].uid].size())
 		{
-			EHexCellDirection dir = _pathForEachNpc[npcCurrent->uid][_pathPositionForEachNpc[npcCurrent->uid]];
+			EHexCellDirection dir = _pathForEachNpc[npcCurrent[i].uid][_pathPositionForEachNpc[npcCurrent[i].uid]];
 
 			//if (MovementPossible(_turnData.npcInfoArray, _turnData.npcInfoArraySize, npcCurrent))
 			{
-				_pathPositionForEachNpc[npcCurrent->uid] += 1;
+				_pathPositionForEachNpc[npcCurrent[i].uid] += 1;
 
 				// Give the order to the npc
-				SOrder order = { EOrderType::Move, npcCurrent->uid, dir };
+				SOrder order = { EOrderType::Move, npcCurrent[i].uid, dir };
 				_orders.push_back(order);
 			}
 		}
-		npcCurrent++;
 	}
-	*/
 }
 
 
-std::vector<EHexCellDirection> MyBotLogic::PathFinderAStar(SNPCInfo* npcCurrent, Heuristic heuristic)
+std::vector<EHexCellDirection> MyBotLogic::PathFinderAStar(SNPCInfo npcCurrent, Heuristic heuristic)
 {
 	// Get the coordinates of the npc's goal
-	Graph::coordinates goalCoordinates = _goalForEachNpc[npcCurrent->uid];
+	Graph::coordinates goalCoordinates = _goalForEachNpc[npcCurrent.uid];
 	
 	// Initialize the record for the start node
-	Node startNode = *(_graph.getNode(Graph::coordinates{npcCurrent->q, npcCurrent->r}));
-	startNode.setCost_so_far(goalCoordinates, 0.f);
-	startNode.setHeuristic(goalCoordinates, heuristic.estimate(Graph::coordinates{npcCurrent->q, npcCurrent->r}));
-	
+	Node* startNode = (_graph.getNode(Graph::coordinates{npcCurrent.q, npcCurrent.r}));
+	startNode->setCost_so_far(goalCoordinates, 0.f);
+	startNode->setHeuristic(goalCoordinates, heuristic.estimate(Graph::coordinates{npcCurrent.q, npcCurrent.r}));
+
 	// Initializing the record vectors
-	std::vector<Node> openNodes{};
+	std::vector<Node*> openNodes{};
 	openNodes.push_back(startNode);
-	std::vector<Node> closedNodes{};
-	Node currentNode;
+	std::vector<Node*> closedNodes{};
+	Node* currentNode;
 
 	while (!openNodes.empty())
 	{
@@ -131,63 +126,61 @@ std::vector<EHexCellDirection> MyBotLogic::PathFinderAStar(SNPCInfo* npcCurrent,
 		currentNode = FindClosestNode(openNodes, goalCoordinates);
 
 		// If it is a goal node, then terminate
-		//if (currentNode.tile.type == EHexCellType::Goal)
-		//	break;
+		if (currentNode->getTileInfo().type == EHexCellType::Goal)
+			break;
 
 		// Otherwise get its outgoing connections
-		Node::adjencyList adjacentNodes = currentNode.getAdjencyList();
+		Node::adjencyList adjacentNodes = currentNode->getAdjencyList();
 
 		// Loop through each connections
 		for (std::pair<EHexCellDirection, Node*> currentAdjencyNode : adjacentNodes)
 		{
 			// Get the estimated cost to the end tile
-			Node endNode = *currentAdjencyNode.second;
-			float endNodeCostSoFar = currentNode.getCost_so_far(goalCoordinates) + 1;
+			Node* endNode = currentAdjencyNode.second;
+			float endNodeCostSoFar = currentNode->getCost_so_far(goalCoordinates) + 1;
 
 			float endNodeHeuristic;
 
 			// If the end tile is closed we may have to skip or remove it from the closed list
 			if (find(begin(closedNodes), end(closedNodes), endNode) != end(closedNodes))
 			{
-				// Find the record corresponding in the closedNodes vector
-				// endTileRecord = find_if(begin(closedNodes), end(closedNodes), FindTile{ endTile })[0];
-
 				// if we didn't find a shorter route, skip
-				if (endNode.getCost_so_far(goalCoordinates) <= endNodeCostSoFar)
+				if ((endNode->getCost_so_far(goalCoordinates) <= endNodeCostSoFar))
 					continue;
 
 				// Otherwise, remove it from the closed list
-				openNodes.erase(std::remove(begin(closedNodes), end(closedNodes), endNode), end(closedNodes));
+				closedNodes.erase(std::remove(begin(closedNodes), end(closedNodes), endNode), end(closedNodes));
 
 				// Calculate the heuristic without calling the function again
-				endNodeHeuristic = endNode.getTotalEstimatedCost(goalCoordinates) - endNode.getCost_so_far(goalCoordinates);
+				endNodeHeuristic = endNode->getTotalEstimatedCost(goalCoordinates) - endNode->getCost_so_far(goalCoordinates);
 			}
 			// skip if the tile is open and we've not found a better route
 			else if (find(begin(openNodes), end(openNodes), endNode) != end(openNodes))
 			{
-				// Find the record corresponding in the closedNodes vector
-				// endTileRecord = find_if(begin(openNodes), end(openNodes), FindTile{ endTile })[0];
 
 				// If our route is not better then skip
-				if (endNode.getCost_so_far(goalCoordinates) <= endNodeCostSoFar)
+				if ((endNode->getCost_so_far(goalCoordinates) <= endNodeCostSoFar))
 					continue;
 
+				// Otherwise, remove it from the closed list
+				openNodes.erase(std::remove(begin(openNodes), end(openNodes), endNode), end(openNodes));
+
 				// Calculate the heuristic without calling the function again
-				endNodeHeuristic = endNode.getTotalEstimatedCost(goalCoordinates) - endNode.getCost_so_far(goalCoordinates);
+				endNodeHeuristic = endNode->getTotalEstimatedCost(goalCoordinates) - endNode->getCost_so_far(goalCoordinates);
 			}
 			// Otherwise, we know that we have an unvisited node so we can create the record for it
 			else
 			{
-				endNodeHeuristic = heuristic.estimate(endNode.getNodeCoordinates());
+				endNodeHeuristic = heuristic.estimate(endNode->getNodeCoordinates());
 			}
 
 			// Update the record
-			endNode.setCost_so_far(goalCoordinates, endNodeCostSoFar);
+			endNode->setCost_so_far(goalCoordinates, endNodeCostSoFar);
 //			endTileRecord.connection = currentConnection;
-			endNode.setHeuristic(goalCoordinates, endNodeHeuristic);
+			endNode->setHeuristic(goalCoordinates, endNodeHeuristic);
 
+			
 			// Add the Record to the open list
-			// TODO : Modifier pour ne trouver que les node qui ont les mêmes coordonnees et pas forcement celle avec la meme exact node
 			if (find(begin(openNodes), end(openNodes), endNode) == end(openNodes))
 			{
 				openNodes.push_back(endNode);
@@ -199,8 +192,9 @@ std::vector<EHexCellDirection> MyBotLogic::PathFinderAStar(SNPCInfo* npcCurrent,
 
 		closedNodes.push_back(currentNode);
 	}
+
 	// Find if we have found the goal or we ran out of tiles
-	if (currentNode.getTileInfo().type != EHexCellType::Goal)
+	if (currentNode->getTileInfo().type != EHexCellType::Goal)
 	{
 		return std::vector<EHexCellDirection>{}; // No solutions
 	}
@@ -212,14 +206,14 @@ std::vector<EHexCellDirection> MyBotLogic::PathFinderAStar(SNPCInfo* npcCurrent,
 		while (currentNode != startNode)
 		{
 			// Search for the next tile closest to the start 
-			Node::adjencyList adjencyList = currentNode.getAdjencyList();
+			Node::adjencyList adjencyList = currentNode->getAdjencyList();
 
 			for (std::pair<EHexCellDirection, Node*> nodeAdjency : adjencyList)
 			{
-				if (nodeAdjency.second->getCost_so_far(goalCoordinates) == currentNode.getCost_so_far(goalCoordinates) - 1)
+				if (nodeAdjency.second->getCost_so_far(goalCoordinates) == currentNode->getCost_so_far(goalCoordinates) - 1)
 				{
 					path.push_back(allDirectionReversed[nodeAdjency.first]);
-					currentNode = *nodeAdjency.second;
+					currentNode = nodeAdjency.second;
 					break;
 				}
 			}
@@ -231,17 +225,17 @@ std::vector<EHexCellDirection> MyBotLogic::PathFinderAStar(SNPCInfo* npcCurrent,
 	}
 }
 
-Node MyBotLogic::FindClosestNode(std::vector<Node> nodes, Graph::coordinates goalCoordinates)
+Node* MyBotLogic::FindClosestNode(std::vector<Node*> nodes, Graph::coordinates goalCoordinates)
 {
-	float minEstimatedTotalCost = nodes[0].getTotalEstimatedCost(goalCoordinates);
+	float minEstimatedTotalCost = nodes[0]->getTotalEstimatedCost(goalCoordinates);
 	int indexMin = 0;
 
 	for (int i = 1; i < nodes.size(); i++)
 	{
-		if (nodes[i].getTotalEstimatedCost(goalCoordinates) < minEstimatedTotalCost)
+		if (nodes[i]->getTotalEstimatedCost(goalCoordinates) < minEstimatedTotalCost)
 		{
 			indexMin = i;
-			minEstimatedTotalCost = nodes[i].getTotalEstimatedCost(goalCoordinates);
+			minEstimatedTotalCost = nodes[i]->getTotalEstimatedCost(goalCoordinates);
 		}
 	}
 

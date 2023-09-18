@@ -118,7 +118,7 @@ bool Graph::isInitialized(coordinates coordinates)
 	return _nodes.find(coordinates) != _nodes.end();
 }
 
-Graph::coordinates Graph::GetClosestGoalInfo(SNPCInfo* npcCurrent)
+Graph::coordinates Graph::GetClosestGoalInfo(SNPCInfo npcCurrent)
 {
 	size_t minDist = _size;
 	int distance;
@@ -131,21 +131,22 @@ Graph::coordinates Graph::GetClosestGoalInfo(SNPCInfo* npcCurrent)
 			distance = distanceHexCoordNpc(goal.first, npcCurrent);
 			if (minDist > distance)
 			{
+				minDist = distance;
 				closestgoalCoordinates = goal.first;
 			}
 		}
 	}
 
 	// register the npc id for the closest goal
-	_goals[closestgoalCoordinates] = npcCurrent->uid;
+	_goals[closestgoalCoordinates] = npcCurrent.uid;
 
 	return closestgoalCoordinates;
 }
 
-int Graph::distanceHexCoordNpc(coordinates coordinates, SNPCInfo* npcInfo)
+int Graph::distanceHexCoordNpc(coordinates coordinates, SNPCInfo npcInfo)
 {
-	int qdiff = coordinates.first -npcInfo->q;
-	int rdiff = coordinates.second - npcInfo->r;
+	int qdiff = coordinates.first -npcInfo.q;
+	int rdiff = coordinates.second - npcInfo.r;
 	int sdiff = -(qdiff + rdiff);
 
 	return (abs(qdiff) + abs(rdiff) + abs(sdiff)) / 2;

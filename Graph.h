@@ -47,8 +47,8 @@ public:
 	std::map<coordinates, Node*> getNodes() { return _nodes; };
 	Node* getNode(coordinates coord) { return _nodes[coord]; };
 
-	coordinates GetClosestGoalInfo(SNPCInfo* npcCurrent);
-	int distanceHexCoordNpc(coordinates coordinates, SNPCInfo* npcInfo);
+	coordinates GetClosestGoalInfo(SNPCInfo npcCurrent);
+	int distanceHexCoordNpc(coordinates coordinates, SNPCInfo npcInfo);
 
 	std::string printGraph();
 };
