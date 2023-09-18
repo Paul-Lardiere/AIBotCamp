@@ -5,6 +5,7 @@
 class Node
 {
 	using coordinates = std::pair<int, int>;
+public:
 	using adjencyList = std::map<EHexCellDirection, Node*>;
 
 private:
@@ -30,11 +31,35 @@ public:
 
 	Node* getNodeDirection(EHexCellDirection direction);
 	STileInfo getTileInfo() { return _tile; };
+	coordinates getNodeCoordinates() { return coordinates{ _tile.q, _tile.r }; }
 
 	void setCost_so_far(coordinates coordinate, float cost_so_far) { _cost_so_far.insert({coordinate, cost_so_far}); };
-	float getCost_so_far(coordinates coordinate) { return _cost_so_far.at(coordinate); };
+	float getCost_so_far(coordinates coordinate) { 
+		if (_cost_so_far.contains(coordinate))
+			return _cost_so_far.at(coordinate); 
+		return -1;
+	};
 
 	void setHeuristic(coordinates coordinate, float heuristic) { _heuristic.insert({ coordinate, heuristic }); };
-	float getHeuristic(coordinates coordinate) { return _heuristic.at(coordinate); };
+	float getHeuristic(coordinates coordinate) {
+		if (_heuristic.contains(coordinate))
+			return _heuristic.at(coordinate);
+		return -1;
+	}
 
+	float getTotalEstimatedCost(coordinates coordinate) { 
+		if (_heuristic.contains(coordinate) && _cost_so_far.contains(coordinate))
+			return _heuristic.at(coordinate) + _cost_so_far.at(coordinate); 
+		return -1;
+	}
+
+	bool operator==(Node node) const {
+		return ((node.getTileInfo().q == _tile.q) &&
+			(node.getTileInfo().r == _tile.r));
+	}
+
+	bool operator!=(Node node) const {
+		return ((node.getTileInfo().q != _tile.q) ||
+			(node.getTileInfo().r != _tile.r));
+	}
 };
