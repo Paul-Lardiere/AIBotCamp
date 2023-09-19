@@ -8,7 +8,7 @@
 /// </summary>
 /// <param name="size"></param>
 /// <param name="_tileList"></param>
-void Graph::InitGraph(size_t size, const STileInfo* _tileList, SObjectInfo* objectInfoArray, int objectInfoArraySize)
+void Graph::InitGraph(size_t size, const STileInfo* _tileList, SObjectInfo* objectInfoArray, int objectInfoArraySize, coordinates coordNPC)
 {
 	_objectInfoArray = objectInfoArray;
 	_objectInfoArraySize = objectInfoArraySize;
@@ -16,7 +16,12 @@ void Graph::InitGraph(size_t size, const STileInfo* _tileList, SObjectInfo* obje
 		if (initTileInfo.type != Forbidden)
 			_initMap.insert({ coordinates {initTileInfo.q, initTileInfo.r}, initTileInfo });
 		});
-	Node* node = new Node(_initMap.begin()->second);
+
+	const STileInfo* tileNPC = std::find_if(_tileList + 0, _tileList + size, [&coordNPC](STileInfo tile) {
+		return ((tile.q == coordNPC.first) && (tile.r == coordNPC.second));
+		});
+
+	Node* node = new Node(*tileNPC);
 
 	addNode(node);
 	createGraph(node);
@@ -157,11 +162,12 @@ std::string Graph::printGraph()
 	std::string ret;
 	for (auto it = _nodes.cbegin(); it != _nodes.cend(); ++it)
 	{
-		ret += std::format("Node ({},{}) :\n", it->second->getTileInfo().q, it->second->getTileInfo().r);
+		ret += std::format("Node ({},{}) : type {}\n", it->second->getTileInfo().q, it->second->getTileInfo().r, static_cast<int>(it->second->getTileInfo().type));
 		for (auto it2 = it->second->getAdjencyList().begin(); it2 != it->second->getAdjencyList().end(); ++it2)
 			ret += std::format("({},{}) ", it2->second->getTileInfo().q, it2->second->getTileInfo().r);
 		ret += "\n";
 	}
+
 	return ret;
 }
 

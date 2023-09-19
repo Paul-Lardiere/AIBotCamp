@@ -40,7 +40,7 @@ public:
 		return singleton;
 	}
 
-	void InitGraph(size_t size, const STileInfo* _tileList, SObjectInfo* objectInfoArray, int objectInfoArraySize);
+	void InitGraph(size_t size, const STileInfo* _tileList, SObjectInfo* objectInfoArray, int objectInfoArraySize, coordinates coordNPC);
 	~Graph();
 	const size_t getSize() { return _size; };
 
@@ -52,6 +52,9 @@ public:
 
 	void setOccupiedNode(coordinates coord, bool isOccupied) { _nodes[coord]->setOccupied(isOccupied); }
 	bool IsNodeOccupied(coordinates coord) { return _nodes[coord]->isOccupied(); }
+
+	bool isFinished(coordinates coord) { return _nodes[coord]->finished; }
+	void setFinished(coordinates coord) { _nodes[coord]->finished = true; }
 
 	std::string printGraph();
 };

@@ -58,13 +58,14 @@ void MyBotLogic::Configure(const SConfigData& _configData)
 
 void MyBotLogic::Init(const SInitData& _initData)
 {
-	BOT_LOGIC_LOG(mLogger, "Init", true);
-	_graph.InitGraph(_initData.tileInfoArraySize, _initData.tileInfoArray, _initData.objectInfoArray, _initData.objectInfoArraySize);
-	BOT_LOGIC_LOG(mLogger, _graph.printGraph(), true);
-
-	// Calculate the closest goal to each npc without doubled ones
 	SNPCInfo* npcCurrent = _initData.npcInfoArray;
 
+	BOT_LOGIC_LOG(mLogger, "Init", true);
+	_graph.InitGraph(_initData.tileInfoArraySize, _initData.tileInfoArray, _initData.objectInfoArray, _initData.objectInfoArraySize, coordinates{npcCurrent[0].q, npcCurrent[0].r});
+	BOT_LOGIC_LOG(mLogger, _graph.printGraph(), true);
+
+
+	// Calculate the closest goal to each npc without doubled ones
 	for (int i = 0; i < _initData.nbNPCs; i++)
 	{
 		_goalForEachNpc[npcCurrent[i].uid] = _graph.GetClosestGoalInfo(npcCurrent[i]);
@@ -117,13 +118,22 @@ void MyBotLogic::GetTurnOrders(const STurnData& _turnData, std::list<SOrder>& _o
 				break;
 			}
 
-			if (!_graph.IsNodeOccupied(coordDest))
+			if (_graph.isFinished(coordDest))
+			{
+				// Calcul again A*
+				_pathForEachNpc[npcCurrent[i].uid] = PathFinderAStar(npcCurrent[i], Heuristic{ _goalForEachNpc[npcCurrent[i].uid] });
+				_pathPositionForEachNpc[npcCurrent[i].uid] = 0;
+			}
+			else if (!_graph.IsNodeOccupied(coordDest))
 			{
 				// We free the old node
 				_graph.setOccupiedNode(coordinates{ npcCurrent[i].q, npcCurrent[i].r }, false);
 				// We go on the next node
 				_graph.setOccupiedNode(coordDest, true);
 				_pathPositionForEachNpc[npcCurrent[i].uid] += 1;
+
+				if (_pathPositionForEachNpc[npcCurrent[i].uid] == _pathForEachNpc[npcCurrent[i].uid].size())
+					_graph.setFinished(coordDest);
 
 				// Give the order to the npc
 				SOrder order = { EOrderType::Move, npcCurrent[i].uid, dir };
@@ -165,6 +175,9 @@ std::vector<EHexCellDirection> MyBotLogic::PathFinderAStar(SNPCInfo npcCurrent, 
 		// Loop through each connections
 		for (std::pair<EHexCellDirection, Node*> currentAdjencyNode : adjacentNodes)
 		{
+			if (currentAdjencyNode.second->finished)
+				continue;
+
 			// Get the estimated cost to the end tile
 			Node* endNode = currentAdjencyNode.second;
 			float endNodeCostSoFar = currentNode->getCost_so_far(goalCoordinates) + 1;
