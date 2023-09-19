@@ -1,3 +1,0 @@
-D:/IA/AIBotcamp/build-solution-x64/CMakeFiles/myfirstaibot.dir
-D:/IA/AIBotcamp/build-solution-x64/CMakeFiles/ALL_BUILD.dir
-D:/IA/AIBotcamp/build-solution-x64/CMakeFiles/ZERO_CHECK.dir
