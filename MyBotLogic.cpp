@@ -73,11 +73,11 @@ void MyBotLogic::Init(const SInitData& _initData)
 
 	// Reinitialisation of the NPC
 	npcCurrent = _initData.npcInfoArray;
-
+	maxTourNb = _initData.maxTurnNb;
 	// Calculate the path for each NPC
 	for (int i = 0; i < _initData.nbNPCs; i++)
 	{
-		_pathForEachNpc[npcCurrent[i].uid] = PathFinderAStar(npcCurrent[i], Heuristic{_goalForEachNpc[npcCurrent[i].uid]});
+		_pathForEachNpc[npcCurrent[i].uid] = PathFinderAStar(npcCurrent[i], Heuristic{ _goalForEachNpc[npcCurrent[i].uid] }, maxTourNb);
 		_pathPositionForEachNpc[npcCurrent[i].uid] = 0;
 		_graph.setOccupiedNode(coordinates{ npcCurrent[i].q, npcCurrent[i].r }, true);
 	}
@@ -121,7 +121,7 @@ void MyBotLogic::GetTurnOrders(const STurnData& _turnData, std::list<SOrder>& _o
 			if (_graph.isFinished(coordDest))
 			{
 				// Calcul again A*
-				_pathForEachNpc[npcCurrent[i].uid] = PathFinderAStar(npcCurrent[i], Heuristic{ _goalForEachNpc[npcCurrent[i].uid] });
+				_pathForEachNpc[npcCurrent[i].uid] = PathFinderAStar(npcCurrent[i], Heuristic{ _goalForEachNpc[npcCurrent[i].uid] }, maxTourNb);
 				_pathPositionForEachNpc[npcCurrent[i].uid] = 0;
 			}
 			else if (!_graph.IsNodeOccupied(coordDest))
@@ -144,7 +144,7 @@ void MyBotLogic::GetTurnOrders(const STurnData& _turnData, std::list<SOrder>& _o
 }
 
 
-std::vector<EHexCellDirection> MyBotLogic::PathFinderAStar(SNPCInfo npcCurrent, Heuristic heuristic)
+std::vector<EHexCellDirection> MyBotLogic::PathFinderAStar(SNPCInfo npcCurrent, Heuristic heuristic, int maxTurnNb)
 {
 	// Get the coordinates of the npc's goal
 	Graph::coordinates goalCoordinates = _goalForEachNpc[npcCurrent.uid];
@@ -182,6 +182,9 @@ std::vector<EHexCellDirection> MyBotLogic::PathFinderAStar(SNPCInfo npcCurrent, 
 			Node* endNode = currentAdjencyNode.second;
 			float endNodeCostSoFar = currentNode->getCost_so_far(goalCoordinates) + 1;
 
+			if (endNodeCostSoFar > maxTurnNb)
+				continue;
+
 			float endNodeHeuristic;
 
 			// If the end tile is closed we may have to skip or remove it from the closed list
@@ -190,7 +193,7 @@ std::vector<EHexCellDirection> MyBotLogic::PathFinderAStar(SNPCInfo npcCurrent, 
 				// if we didn't find a shorter route, skip
 				if ((endNode->getCost_so_far(goalCoordinates) <= endNodeCostSoFar))
 					continue;
-
+				
 				// Otherwise, remove it from the closed list
 				closedNodes.erase(std::remove(begin(closedNodes), end(closedNodes), endNode), end(closedNodes));
 
@@ -200,7 +203,6 @@ std::vector<EHexCellDirection> MyBotLogic::PathFinderAStar(SNPCInfo npcCurrent, 
 			// skip if the tile is open and we've not found a better route
 			else if (find(begin(openNodes), end(openNodes), endNode) != end(openNodes))
 			{
-
 				// If our route is not better then skip
 				if ((endNode->getCost_so_far(goalCoordinates) <= endNodeCostSoFar))
 					continue;
@@ -219,10 +221,8 @@ std::vector<EHexCellDirection> MyBotLogic::PathFinderAStar(SNPCInfo npcCurrent, 
 
 			// Update the record
 			endNode->setCost_so_far(goalCoordinates, endNodeCostSoFar);
-//			endTileRecord.connection = currentConnection;
 			endNode->setHeuristic(goalCoordinates, endNodeHeuristic);
 
-			
 			// Add the Record to the open list
 			if (find(begin(openNodes), end(openNodes), endNode) == end(openNodes))
 			{

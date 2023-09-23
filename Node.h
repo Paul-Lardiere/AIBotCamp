@@ -33,7 +33,7 @@ public:
 	STileInfo getTileInfo() { return _tile; };
 	coordinates getNodeCoordinates() { return coordinates{ _tile.q, _tile.r }; }
 
-	void setCost_so_far(coordinates coordinate, float cost_so_far) { _cost_so_far.insert({coordinate, cost_so_far}); };
+	void setCost_so_far(coordinates coordinate, float cost_so_far) { _cost_so_far[coordinate] = cost_so_far; };
 	float getCost_so_far(coordinates coordinate) { 
 		if (_cost_so_far.contains(coordinate))
 			return _cost_so_far.at(coordinate); 
