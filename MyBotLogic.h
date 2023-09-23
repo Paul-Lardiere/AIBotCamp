@@ -30,8 +30,9 @@ private:
 	std::map<int, Graph::coordinates> _goalForEachNpc;
 	std::map<int, std::vector<EHexCellDirection>> _pathForEachNpc;
 	std::map<int, int> _pathPositionForEachNpc;
+	int maxTourNb;
 
-	std::vector<EHexCellDirection> PathFinderAStar(SNPCInfo npcCurrent, Heuristic heuristic);
+	std::vector<EHexCellDirection> PathFinderAStar(SNPCInfo npcCurrent, Heuristic heuristic, int maxTurnNb);
 	Node* FindClosestNode(std::vector<Node*> nodes, Graph::coordinates goalCoordinates);
 public:
 	MyBotLogic();
