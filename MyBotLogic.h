@@ -34,6 +34,8 @@ private:
 
 	std::vector<EHexCellDirection> PathFinderAStar(SNPCInfo npcCurrent, Heuristic heuristic, int maxTurnNb);
 	Node* FindClosestNode(std::vector<Node*> nodes, Graph::coordinates goalCoordinates);
+	void exploration(const STurnData& _turndata, std::list<SOrder>& _orders);
+	coordinates getCoordinatesDirection(coordinates coordinate, EHexCellDirection direction);
 public:
 	MyBotLogic();
 	virtual ~MyBotLogic();

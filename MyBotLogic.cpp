@@ -64,13 +64,9 @@ void MyBotLogic::Init(const SInitData& _initData)
 	_graph.InitGraph(_initData.tileInfoArraySize, _initData.tileInfoArray, _initData.objectInfoArray, _initData.objectInfoArraySize, coordinates{npcCurrent[0].q, npcCurrent[0].r});
 	BOT_LOGIC_LOG(mLogger, _graph.printGraph(), true);
 
+	maxTourNb = _initData.maxTurnNb;
 
-	// Calculate the closest goal to each npc without doubled ones
-	for (int i = 0; i < _initData.nbNPCs; i++)
-	{
-		_goalForEachNpc[npcCurrent[i].uid] = _graph.GetClosestGoalInfo(npcCurrent[i]);
-	}
-
+	/*
 	// Reinitialisation of the NPC
 	npcCurrent = _initData.npcInfoArray;
 	maxTourNb = _initData.maxTurnNb;
@@ -81,63 +77,84 @@ void MyBotLogic::Init(const SInitData& _initData)
 		_pathPositionForEachNpc[npcCurrent[i].uid] = 0;
 		_graph.setOccupiedNode(coordinates{ npcCurrent[i].q, npcCurrent[i].r }, true);
 	}
+	*/
+	
 }
 
 void MyBotLogic::GetTurnOrders(const STurnData& _turnData, std::list<SOrder>& _orders)
 {
-	SNPCInfo* npcCurrent = _turnData.npcInfoArray;
-
-	for (int i = 0; i < _turnData.npcInfoArraySize; i++)
+	BOT_LOGIC_LOG(mLogger, std::format("graph:"), true);
+	for (int i = 0; i < _turnData.tileInfoArraySize; ++i)
 	{
-		if (_pathPositionForEachNpc[npcCurrent[i].uid] < _pathForEachNpc[npcCurrent[i].uid].size())
+		BOT_LOGIC_LOG(mLogger, std::format("({},{}), type:{}", _turnData.tileInfoArray[i].q, _turnData.tileInfoArray[i].r, static_cast<int>(_turnData.tileInfoArray[i].type)), true);
+	}
+
+
+
+	SNPCInfo* npcCurrent = _turnData.npcInfoArray;
+	_graph.updateGraph(_turnData.tileInfoArraySize, _turnData.tileInfoArray, _turnData.objectInfoArray, _turnData.objectInfoArraySize, coordinates{ npcCurrent[0].q, npcCurrent[0].r });
+	BOT_LOGIC_LOG(mLogger, _graph.printGraph(), true);
+	BOT_LOGIC_LOG(mLogger, std::format("{}",_goalForEachNpc.size()), true);	
+
+	BOT_LOGIC_LOG(mLogger, std::format("{}", _graph._goals.size()), true);
+
+
+	
+	if (!_graph.hasEnoughGoals(_turnData.npcInfoArraySize)) {
+		BOT_LOGIC_LOG(mLogger, "exploration", true);
+
+		exploration(_turnData,_orders);
+	}
+	else
+	{
+		if (_goalForEachNpc.size() < _turnData.npcInfoArraySize)
 		{
-			EHexCellDirection dir = _pathForEachNpc[npcCurrent[i].uid][_pathPositionForEachNpc[npcCurrent[i].uid]];
-
-			coordinates coordDest;
-			switch (dir)
+			for (int i = 0; i < _turnData.npcInfoArraySize; i++)
 			{
-			case W:
-				coordDest = (coordinates{ npcCurrent[i].q, npcCurrent[i].r - 1});
-				break;
-			case NW:
-				coordDest = (coordinates{ npcCurrent[i].q - 1, npcCurrent[i].r });
-				break;
-			case NE:
-				coordDest = (coordinates{ npcCurrent[i].q - 1, npcCurrent[i].r + 1 });
-				break;
-			case E:
-				coordDest = (coordinates{ npcCurrent[i].q, npcCurrent[i].r + 1 });
-				break;
-			case SE:
-				coordDest = (coordinates{ npcCurrent[i].q + 1, npcCurrent[i].r });
-				break;
-			case SW:
-				coordDest = (coordinates{ npcCurrent[i].q + 1, npcCurrent[i].r - 1 });
-				break;
-			default:
-				break;
+				coordinates coordGoal = _graph.GetClosestGoalInfo(npcCurrent[i]);
+				if (coordGoal != coordinates{-1, -1})
+					_goalForEachNpc[npcCurrent[i].uid] = coordGoal;
 			}
-
-			if (_graph.isFinished(coordDest))
+			// Reinitialisation of the NPC
+			npcCurrent = _turnData.npcInfoArray;
+			// Calculate the path for each NPC
+			for (int i = 0; i < _turnData.npcInfoArraySize; i++)
 			{
-				// Calcul again A*
 				_pathForEachNpc[npcCurrent[i].uid] = PathFinderAStar(npcCurrent[i], Heuristic{ _goalForEachNpc[npcCurrent[i].uid] }, maxTourNb);
 				_pathPositionForEachNpc[npcCurrent[i].uid] = 0;
+				_graph.setOccupiedNode(coordinates{ npcCurrent[i].q, npcCurrent[i].r }, true);
 			}
-			else if (!_graph.IsNodeOccupied(coordDest))
+		}
+
+		for (int i = 0; i < _turnData.npcInfoArraySize; i++)
+		{
+			if (_pathPositionForEachNpc[npcCurrent[i].uid] < _pathForEachNpc[npcCurrent[i].uid].size())
 			{
-				// We free the old node
-				_graph.setOccupiedNode(coordinates{ npcCurrent[i].q, npcCurrent[i].r }, false);
-				// We go on the next node
-				_graph.setOccupiedNode(coordDest, true);
-				_pathPositionForEachNpc[npcCurrent[i].uid] += 1;
+				EHexCellDirection dir = _pathForEachNpc[npcCurrent[i].uid][_pathPositionForEachNpc[npcCurrent[i].uid]];
 
-				if (_pathPositionForEachNpc[npcCurrent[i].uid] == _pathForEachNpc[npcCurrent[i].uid].size())
-					_graph.setFinished(coordDest);
+				coordinates coordDest = getCoordinatesDirection(coordinates{ npcCurrent[i].q, npcCurrent[i].r }, dir);
 
-				// Give the order to the npc
-				SOrder order = { EOrderType::Move, npcCurrent[i].uid, dir };
-				_orders.push_back(order);
+				if (_graph.isFinished(coordDest))
+				{
+					// Calcul again A*
+					_pathForEachNpc[npcCurrent[i].uid] = PathFinderAStar(npcCurrent[i], Heuristic{ _goalForEachNpc[npcCurrent[i].uid] }, maxTourNb);
+					_pathPositionForEachNpc[npcCurrent[i].uid] = 0;
+				}
+				else if (!_graph.IsNodeOccupied(coordDest))
+				{
+					// We free the old node
+					_graph.setOccupiedNode(coordinates{ npcCurrent[i].q, npcCurrent[i].r }, false);
+					// We go on the next node
+					_graph.setOccupiedNode(coordDest, true);
+					_pathPositionForEachNpc[npcCurrent[i].uid] += 1;
+
+					if (_pathPositionForEachNpc[npcCurrent[i].uid] == _pathForEachNpc[npcCurrent[i].uid].size())
+						_graph.setFinished(coordDest);
+
+					// Give the order to the npc
+					SOrder order = { EOrderType::Move, npcCurrent[i].uid, dir };
+					_orders.push_back(order);
+				}
 			}
 		}
 	}
@@ -283,4 +300,64 @@ Node* MyBotLogic::FindClosestNode(std::vector<Node*> nodes, Graph::coordinates g
 	}
 
 	return nodes[indexMin];
+}
+
+void MyBotLogic::exploration(const STurnData& turnData, std::list<SOrder>& _orders)
+{
+
+
+	for (int i = 0; i < turnData.npcInfoArraySize; ++i) {
+		Node *node = _graph.getNode(coordinates{ turnData.npcInfoArray[i].q, turnData.npcInfoArray[i].r });
+		Node::adjencyList adjacentNodes = node->getAdjencyList();
+
+		int mini = turnData.tileInfoArraySize;
+		EHexCellDirection direction = W;
+
+		// Loop through each connections
+		for (std::pair<EHexCellDirection, Node*> currentAdjencyNode : adjacentNodes)
+		{
+			if (currentAdjencyNode.second->timesExplored < mini)
+			{
+				mini = currentAdjencyNode.second->timesExplored;
+				direction = currentAdjencyNode.first;
+			}
+		}
+
+		SOrder order = { EOrderType::Move, turnData.npcInfoArray[i].uid, direction};
+		_graph.addTimesExplored(getCoordinatesDirection(coordinates{ turnData.npcInfoArray[i].q, turnData.npcInfoArray[i].r }, direction ));
+		_orders.push_back(order);
+	}
+
+}
+
+MyBotLogic::coordinates MyBotLogic::getCoordinatesDirection(coordinates coordinate, EHexCellDirection direction)
+{
+	coordinates coordDest = coordinate;
+	switch (direction)
+	{
+	case W:
+		coordDest.second--;
+		break;
+	case NW:
+		coordDest.first--;
+		break;
+	case NE:
+		coordDest.first--;
+		coordDest.second++;
+		break;
+	case E:
+		coordDest.second++;
+		break;
+	case SE:
+		coordDest.first++;
+		break;
+	case SW:
+		coordDest.first++;
+		coordDest.second--;
+		break;
+	default:
+		break;
+	}
+
+	return coordDest;
 }
