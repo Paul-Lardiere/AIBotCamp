@@ -4,7 +4,7 @@
 
 
 /// <summary>
-/// Construit le graph a partir de de la liste de TileInfo on ignornant les tile forbidden
+/// Construit le graph a partir de de la liste de TileInfo on ignorant les tile forbidden
 /// </summary>
 /// <param name="size"></param>
 /// <param name="_tileList"></param>
@@ -14,7 +14,7 @@ void Graph::InitGraph(size_t size, const STileInfo* _tileList, SObjectInfo* obje
 	_objectInfoArraySize = objectInfoArraySize;
 	std::for_each(_tileList, _tileList + size, [this](auto&& initTileInfo) {
 		if (initTileInfo.type != Forbidden)
-			_initMap.insert({ coordinates {initTileInfo.q, initTileInfo.r}, initTileInfo });
+			_initMap[ coordinates {initTileInfo.q, initTileInfo.r}] = initTileInfo;
 		});
 
 	const STileInfo* tileNPC = std::find_if(_tileList + 0, _tileList + size, [&coordNPC](STileInfo tile) {
@@ -22,7 +22,8 @@ void Graph::InitGraph(size_t size, const STileInfo* _tileList, SObjectInfo* obje
 		});
 
 	Node* node = new Node(*tileNPC);
-
+	node->setIdGraph(0);
+	node->timesExplored = 1;
 	addNode(node);
 	createGraph(node);
 }
@@ -59,6 +60,19 @@ void Graph::createGraph(Node* node)
 	updateDirection(SW, (tile.q) + 1, (tile.r) - 1, node);
 
 
+}
+
+void Graph::updateGraph(size_t size, const STileInfo* _tileList, SObjectInfo* objectInfoArray, int objectInfoArraySize, coordinates coordNPC)
+{
+	_initMap.clear();
+	_objectInfoArray = objectInfoArray;
+	_objectInfoArraySize = objectInfoArraySize;
+	std::for_each(_tileList, _tileList + size, [this](auto&& initTileInfo) {
+		if (initTileInfo.type != Forbidden)
+			_initMap[coordinates {initTileInfo.q, initTileInfo.r}] = initTileInfo;
+		});
+	Node * node = _nodes[coordNPC];
+	createGraph(node);
 }
 
 void Graph::updateDirection(EHexCellDirection direction, int q, int r, Node* node)
@@ -128,7 +142,7 @@ Graph::coordinates Graph::GetClosestGoalInfo(SNPCInfo npcCurrent)
 	size_t minDist = _size;
 	int distance;
 
-	Graph::coordinates closestgoalCoordinates;
+	Graph::coordinates closestgoalCoordinates{-1, -1};
 
 	for (std::pair<Graph::coordinates, int> goal : _goals) {
 		if (goal.second == -1) // if not used by another npc
@@ -143,7 +157,8 @@ Graph::coordinates Graph::GetClosestGoalInfo(SNPCInfo npcCurrent)
 	}
 
 	// register the npc id for the closest goal
-	_goals[closestgoalCoordinates] = npcCurrent.uid;
+	if (closestgoalCoordinates != coordinates{-1, -1})
+		_goals[closestgoalCoordinates] = npcCurrent.uid;
 
 	return closestgoalCoordinates;
 }
