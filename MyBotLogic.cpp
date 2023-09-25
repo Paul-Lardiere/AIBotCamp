@@ -64,14 +64,7 @@ void MyBotLogic::Init(const SInitData& _initData)
 	_graph.InitGraph(_initData.tileInfoArraySize, _initData.tileInfoArray, _initData.objectInfoArray, _initData.objectInfoArraySize, coordinates{npcCurrent[0].q, npcCurrent[0].r});
 	BOT_LOGIC_LOG(mLogger, _graph.printGraph(), true);
 
-
-	// Calculate the closest goal to each npc without doubled ones
-	for (int i = 0; i < _initData.nbNPCs; i++)
-	{
-		coordinates coordGoal = _graph.GetClosestGoalInfo(npcCurrent[i]);
-		if(coordGoal != coordinates{-1, -1})
-			_goalForEachNpc[npcCurrent[i].uid] = coordGoal;
-	}
+	maxTourNb = _initData.maxTurnNb;
 
 	/*
 	// Reinitialisation of the NPC
@@ -103,13 +96,36 @@ void MyBotLogic::GetTurnOrders(const STurnData& _turnData, std::list<SOrder>& _o
 	BOT_LOGIC_LOG(mLogger, _graph.printGraph(), true);
 	BOT_LOGIC_LOG(mLogger, std::format("{}",_goalForEachNpc.size()), true);	
 
-	BOT_LOGIC_LOG(mLogger, std::format("{}", _turnData.npcInfoArraySize), true);
-	if (_goalForEachNpc.size() != _turnData.npcInfoArraySize) {
+	BOT_LOGIC_LOG(mLogger, std::format("{}", _graph._goals.size()), true);
+
+
+	
+	if (!_graph.hasEnoughGoals(_turnData.npcInfoArraySize)) {
 		BOT_LOGIC_LOG(mLogger, "exploration", true);
 
 		exploration(_turnData,_orders);
 	}
-	else {
+	else
+	{
+		if (_goalForEachNpc.size() < _turnData.npcInfoArraySize)
+		{
+			for (int i = 0; i < _turnData.npcInfoArraySize; i++)
+			{
+				coordinates coordGoal = _graph.GetClosestGoalInfo(npcCurrent[i]);
+				if (coordGoal != coordinates{-1, -1})
+					_goalForEachNpc[npcCurrent[i].uid] = coordGoal;
+			}
+			// Reinitialisation of the NPC
+			npcCurrent = _turnData.npcInfoArray;
+			// Calculate the path for each NPC
+			for (int i = 0; i < _turnData.npcInfoArraySize; i++)
+			{
+				_pathForEachNpc[npcCurrent[i].uid] = PathFinderAStar(npcCurrent[i], Heuristic{ _goalForEachNpc[npcCurrent[i].uid] }, maxTourNb);
+				_pathPositionForEachNpc[npcCurrent[i].uid] = 0;
+				_graph.setOccupiedNode(coordinates{ npcCurrent[i].q, npcCurrent[i].r }, true);
+			}
+		}
+
 		for (int i = 0; i < _turnData.npcInfoArraySize; i++)
 		{
 			if (_pathPositionForEachNpc[npcCurrent[i].uid] < _pathForEachNpc[npcCurrent[i].uid].size())
