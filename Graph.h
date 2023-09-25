@@ -16,6 +16,7 @@ private:
 	size_t _size{};
 	std::map<coordinates, Node*> _nodes;
 	std::map<coordinates, STileInfo> _initMap;
+	std::map<int, Node*> _connexeMap;
 	SObjectInfo* _objectInfoArray;
 	int _objectInfoArraySize;
 
@@ -24,11 +25,11 @@ private:
 
 	Graph() = default;
 
-	void createGraph(Node* node);
+	void createGraph(Node* node, int connexeId);
 	bool exist(coordinates coordinates);
 	bool isInitialized(coordinates coordinates);
 	void addNode(Node* node);
-	void updateDirection(EHexCellDirection direction, int q, int r, Node* node);
+	void updateDirection(EHexCellDirection direction, int q, int r, Node* node, int connexeId);
 	bool isNotWalled(coordinates coordinateNode1, coordinates coordinateNode2, EHexCellDirection direction);
 
 public:

@@ -22,9 +22,9 @@ void Graph::InitGraph(size_t size, const STileInfo* _tileList, SObjectInfo* obje
 		});
 
 	Node* node = new Node(*tileNPC);
-
+	_connexeMap.insert({ 0,node });
 	addNode(node);
-	createGraph(node);
+	createGraph(node, 0);
 }
 
 Graph::~Graph()
@@ -41,7 +41,7 @@ Graph::~Graph()
 /// fonction recursive de création du graph
 /// </summary>
 /// <param name="node"></param>
-void Graph::createGraph(Node* node)
+void Graph::createGraph(Node* node, int connexeId)
 {
 	//BOT_LOGIC_LOG(mLogger, format("NODE : {},{}", node->getTileInfo().q, node->getTileInfo().r), true);
 	STileInfo tile = node->getTileInfo();
@@ -51,17 +51,17 @@ void Graph::createGraph(Node* node)
 	/*BOT_LOGIC_LOG(mLogger, "", true);
 
 	BOT_LOGIC_LOG(mLogger, format("node : {},{}", node->getTileInfo().q, node->getTileInfo().r), true);*/
-	updateDirection(W, (tile.q), (tile.r) - 1, node);
-	updateDirection(NW, (tile.q) - 1, (tile.r), node);
-	updateDirection(NE, (tile.q) - 1, (tile.r) + 1, node);
-	updateDirection(E, (tile.q), (tile.r) + 1, node);
-	updateDirection(SE, (tile.q) + 1, (tile.r), node);
-	updateDirection(SW, (tile.q) + 1, (tile.r) - 1, node);
+	updateDirection(W, (tile.q), (tile.r) - 1, node, connexeId);
+	updateDirection(NW, (tile.q) - 1, (tile.r), node, connexeId);
+	updateDirection(NE, (tile.q) - 1, (tile.r) + 1, node, connexeId);
+	updateDirection(E, (tile.q), (tile.r) + 1, node, connexeId);
+	updateDirection(SE, (tile.q) + 1, (tile.r), node, connexeId);
+	updateDirection(SW, (tile.q) + 1, (tile.r) - 1, node, connexeId);
 
 
 }
 
-void Graph::updateDirection(EHexCellDirection direction, int q, int r, Node* node)
+void Graph::updateDirection(EHexCellDirection direction, int q, int r, Node* node,int connexeId)
 {
 	if (!node->inAdjacentList(allDirection[direction]) && exist(coordinates{ q,r }) && isNotWalled(coordinates{ node->getTileInfo().q,node->getTileInfo().r }, coordinates{ q,r }, direction)) {
 
@@ -71,13 +71,14 @@ void Graph::updateDirection(EHexCellDirection direction, int q, int r, Node* nod
 			addNode(newNode);
 			node->addToAdjencyList(allDirection[direction], newNode);
 			newNode->addToAdjencyList(allDirectionReversed[direction], node);
-			createGraph(newNode);
+			createGraph(newNode, connexeId);
 
 		}
 		else {
 			newNode = _nodes[coordinates{ q, r }];
 			node->addToAdjencyList(allDirection[direction], newNode);
 			newNode->addToAdjencyList(allDirectionReversed[direction], node);
+
 		}
 
 
