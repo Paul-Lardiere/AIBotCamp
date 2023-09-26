@@ -37,8 +37,7 @@ std::basic_ostream<A, B>& operator<<(std::basic_ostream<A, B>& s, const std::vec
 
 MyBotLogic::MyBotLogic()
 {
-	maxTourNb = -1;
-	nbNPC = -1;
+	//Write Code Here
 }
 
 MyBotLogic::~MyBotLogic()
@@ -84,7 +83,7 @@ void MyBotLogic::GetTurnOrders(const STurnData& _turnData, std::list<SOrder>& _o
 
 	if (!_graph.hasEnoughGoals(nbNPC, _turnData.npcInfoArray)) {
 		BOT_LOGIC_LOG(mLogger, "exploration", true); 
-		exploration(_turnData, _orders); // Search for goals
+		exploration(_turnData,_orders); // Search for goals
 	}
 	else
 	{
@@ -122,7 +121,7 @@ std::vector<EHexCellDirection> MyBotLogic::PathFinderAStar(SNPCInfo npcCurrent, 
 		currentNode = FindClosestNode(openNodes, goalCoordinates);
 
 		// If it is a goal node, then terminate
-		if (currentNode->getTileInfo().type == EHexCellType::Goal)
+		if (goalFound(currentNode))
 			break;
 
 		// Otherwise get its outgoing connections
@@ -144,30 +143,22 @@ std::vector<EHexCellDirection> MyBotLogic::PathFinderAStar(SNPCInfo npcCurrent, 
 			int endNodeHeuristic;
 
 			// If the end tile is closed we may have to skip or remove it from the closed list
-			if (find(begin(closedNodes), end(closedNodes), endNode) != end(closedNodes)) // TODO : same as the openedOnes
+			if (nodeVectorContains(closedNodes, endNode))
 			{
 				// if we didn't find a shorter route, skip
-				if ((endNode->getCost_so_far(goalCoordinates) <= endNodeCostSoFar))
+				if (!isShorterPath(endNode, endNodeCostSoFar, goalCoordinates))
 					continue;
 				
-				// Otherwise, remove it from the closed list
-				closedNodes.erase(std::remove(begin(closedNodes), end(closedNodes), endNode), end(closedNodes));
-
-				// Calculate the heuristic without calling the function again
-				endNodeHeuristic = endNode->getTotalEstimatedCost(goalCoordinates) - endNode->getCost_so_far(goalCoordinates);
+				endNodeHeuristic = eraseFromVectorAndGetHeuristic(closedNodes, endNode, goalCoordinates);
 			}
 			// skip if the tile is open and we've not found a better route
-			else if (find(begin(openNodes), end(openNodes), endNode) != end(openNodes)) // TODO : same as the closedOnes
+			else if (nodeVectorContains(openNodes, endNode))
 			{
 				// If our route is not better then skip
-				if ((endNode->getCost_so_far(goalCoordinates) <= endNodeCostSoFar))
+				if (!isShorterPath(endNode, endNodeCostSoFar, goalCoordinates))
 					continue;
 
-				// Otherwise, remove it from the closed list
-				openNodes.erase(std::remove(begin(openNodes), end(openNodes), endNode), end(openNodes));
-
-				// Calculate the heuristic without calling the function again
-				endNodeHeuristic = endNode->getTotalEstimatedCost(goalCoordinates) - endNode->getCost_so_far(goalCoordinates);
+				endNodeHeuristic = eraseFromVectorAndGetHeuristic(openNodes, endNode, goalCoordinates);
 			}
 			// Otherwise, we know that we have an unvisited node so we can create the record for it
 			else
@@ -192,7 +183,7 @@ std::vector<EHexCellDirection> MyBotLogic::PathFinderAStar(SNPCInfo npcCurrent, 
 		closedNodes.push_back(currentNode);
 	}
 
-	// Find if we have found the goal
+	// Find if we have found the goal or we ran out of tiles
 	if (!goalFound(currentNode))
 		return std::vector<EHexCellDirection>{}; // No solutions
 	
@@ -205,6 +196,7 @@ std::vector<EHexCellDirection> MyBotLogic::PathFinderAStar(SNPCInfo npcCurrent, 
 	std::reverse(begin(path), end(path));
 
 	return path;
+	
 }
 
 Node* MyBotLogic::FindClosestNode(std::vector<Node*> nodes, Graph::coordinates goalCoordinates)
@@ -320,7 +312,15 @@ void MyBotLogic::applyModificationsToGraph(coordinates coordNPC, coordinates coo
 		_graph.setFinished(coordDest);
 }
 
-Node* MyBotLogic::searchNextTileToTheGoal(Node* currentNode, coordinates goalCoordinates, std::vector<EHexCellDirection> &path)
+bool MyBotLogic::isNextTileToTheStart(Node* nodeAdjency, Node* currentNode, coordinates goalCoordinates)
+{
+	int CostSoFarAdjNode = nodeAdjency->getCost_so_far(goalCoordinates);
+	int CostSoFarCurrentNode = currentNode->getCost_so_far(goalCoordinates);
+
+	return (CostSoFarAdjNode == CostSoFarCurrentNode - 1);
+}
+
+Node* MyBotLogic::searchNextTileToTheGoal(Node* currentNode, coordinates goalCoordinates, std::vector<EHexCellDirection>& path)
 {
 	// Search for the next tile closest to the start 
 	Node::adjencyList adjencyList = currentNode->getAdjencyList();
@@ -329,7 +329,7 @@ Node* MyBotLogic::searchNextTileToTheGoal(Node* currentNode, coordinates goalCoo
 	{
 		if (!isNextTileToTheStart(nodeAdjency.second, currentNode, goalCoordinates))
 			continue;
-		
+
 		path.push_back(allDirectionReversed[nodeAdjency.first]); // Ajout de la direction inverse dans le path
 		currentNode = nodeAdjency.second;
 		break;
@@ -369,10 +369,11 @@ MyBotLogic::coordinates MyBotLogic::getCoordinatesDirection(coordinates coordina
 	return coordDest;
 }
 
-bool MyBotLogic::isNextTileToTheStart(Node* nodeAdjency, Node* currentNode, coordinates goalCoordinates)
+int MyBotLogic::eraseFromVectorAndGetHeuristic(std::vector<Node*>& nodeVector, Node* endNode, coordinates goalCoordinates)
 {
-	int CostSoFarAdjNode = nodeAdjency->getCost_so_far(goalCoordinates);
-	int CostSoFarCurrentNode = currentNode->getCost_so_far(goalCoordinates);
+	nodeVector.erase(std::remove(begin(nodeVector), end(nodeVector), endNode), end(nodeVector));
 
-	return (CostSoFarAdjNode == CostSoFarCurrentNode - 1);
+	// Calculate the heuristic without calling the function again
+	return endNode->getTotalEstimatedCost(goalCoordinates) - endNode->getCost_so_far(goalCoordinates);
+
 }

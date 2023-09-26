@@ -32,7 +32,7 @@ private:
 	bool isNotWalled(coordinates coordinateNode1, coordinates coordinateNode2, EHexCellDirection direction);
 
 	//conditions
-	bool isUsedByAnotherNPC(std::pair<Graph::coordinates, int> goal) { return goal.second == -1; };
+	bool isUsedByAnotherNPC(std::pair<Graph::coordinates, int> goal) { return goal.second != -1; };
 	bool hasSameGraphIndex(int indexGraphNPC, std::pair<Graph::coordinates, int> goal) { return indexGraphNPC == *(getNode(goal.first)->getIdGraph()); }
 
 public:

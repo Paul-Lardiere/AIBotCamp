@@ -43,12 +43,15 @@ private:
 	void calculateAndInitializePath(int idNPC, SNPCInfo npc);
 	void applyModificationsToGraph(coordinates coordNPC, coordinates coordDest, int idNPC);
 	Node* searchNextTileToTheGoal(Node* currentNode, coordinates goalCoordinates, std::vector<EHexCellDirection>& path);
+	int eraseFromVectorAndGetHeuristic(std::vector<Node*>& nodeVector, Node* endNode, coordinates goalCoordinates);
 
 	// conditions
 	bool allGoalsAreAssigned() { return _goalForEachNpc.size() == nbNPC; };
 	bool hasArrived(int idNPC) { return _pathPositionForEachNpc[idNPC] == _pathForEachNpc[idNPC].size(); }
 	bool goalFound(Node* currentNode) {	return currentNode->getTileInfo().type == EHexCellType::Goal; }
 	bool isNextTileToTheStart(Node* nodeAdjency, Node* currentNode, coordinates goalCoordinates);
+	bool nodeVectorContains(std::vector<Node*> nodeVector, Node* nodeToFind) { return find(begin(nodeVector), end(nodeVector), nodeToFind) != end(nodeVector); }
+	bool isShorterPath(Node* otherNode, int currentCostSoFar, coordinates goalCoordinates) { return (otherNode->getCost_so_far(goalCoordinates) > currentCostSoFar); }
 
 public:
 	MyBotLogic();
