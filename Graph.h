@@ -63,10 +63,12 @@ public:
 
 	bool isFinished(coordinates coord) { return _nodes[coord]->finished; }
 	void setFinished(coordinates coord) { _nodes[coord]->finished = true; }
+	
 	void addTimesExplored(coordinates coord) { ++_nodes[coord]->timesExplored; }
 	int getTimesExplored(coordinates coord) {return _nodes[coord]->timesExplored;};
+	
 	std::string printGraph();
 
-	bool hasEnoughGoals(int nbNpc) { return nbNpc <= _goals.size(); }
+	bool hasEnoughGoals(int nbNpc, SNPCInfo* npcInfo);
 };
 

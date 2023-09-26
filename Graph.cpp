@@ -151,12 +151,17 @@ Graph::coordinates Graph::GetClosestGoalInfo(SNPCInfo npcCurrent)
 {
 	size_t minDist = _size;
 	int distance;
+	int indexGraphNpc = *(getNode(coordinates{ npcCurrent.q, npcCurrent.r })->getIdGraph());
 
 	Graph::coordinates closestgoalCoordinates{-1, -1};
 
 	for (std::pair<Graph::coordinates, int> goal : _goals) {
 		if (goal.second == -1) // if not used by another npc
 		{
+			int indexGraphGoal = *(getNode(goal.first)->getIdGraph());
+			if (indexGraphNpc != indexGraphGoal)
+				continue;
+
 			distance = distanceHexCoordNpc(goal.first, npcCurrent);
 			if (minDist > distance)
 			{
@@ -194,5 +199,28 @@ std::string Graph::printGraph()
 	}
 
 	return ret;
+}
+
+bool Graph::hasEnoughGoals(int nbNpc, SNPCInfo* npcInfo)
+{
+	if (nbNpc > _goals.size())
+		return false;
+
+	std::map<int, int> nbGoalsPerGraphIndex;
+	std::map<int, int> nbNPCPerGraphIndex;
+
+	for (std::pair<coordinates, int> goal : _goals)
+	{
+		++(nbGoalsPerGraphIndex[*getNode(goal.first)->getIdGraph()]);
+	}
+	for (int npcIndex = 0; npcIndex < nbNpc; ++npcIndex)
+	{
+		int indexGraph = *(getNode(coordinates{ npcInfo[npcIndex].q, npcInfo[npcIndex].r })->getIdGraph());
+		++(nbNPCPerGraphIndex[indexGraph]);
+		if (nbNPCPerGraphIndex[indexGraph] > nbGoalsPerGraphIndex[indexGraph])
+			return false;
+	}
+
+	return true;
 }
 
