@@ -14,8 +14,8 @@ private:
 	adjencyList _adjencyList;
 
 	// cost so far du noeud pour arriver au goal qui se trouve au coordoonées en clé
-	std::map<coordinates, float> _cost_so_far;
-	std::map<coordinates, float> _heuristic;
+	std::map<coordinates, int> _cost_so_far;
+	std::map<coordinates, int> _heuristic;
 	int* _idGraph;
 	bool _occupied = false;
 
@@ -39,21 +39,21 @@ public:
 	void setIdGraph(int idGrpah) { *_idGraph = std::min(idGrpah, *_idGraph); };
 	void initIdGraph(int * idGraph) { _idGraph = idGraph; };
 
-	void setCost_so_far(coordinates coordinate, float cost_so_far) { _cost_so_far[coordinate] = cost_so_far; };
-	float getCost_so_far(coordinates coordinate) { 
+	void setCost_so_far(coordinates coordinate, int cost_so_far) { _cost_so_far[coordinate] = cost_so_far; };
+	int getCost_so_far(coordinates coordinate) { 
 		if (_cost_so_far.contains(coordinate))
 			return _cost_so_far.at(coordinate); 
 		return -1;
 	};
 
-	void setHeuristic(coordinates coordinate, float heuristic) { _heuristic.insert({ coordinate, heuristic }); };
-	float getHeuristic(coordinates coordinate) {
+	void setHeuristic(coordinates coordinate, int heuristic) { _heuristic.insert({ coordinate, heuristic }); };
+	int getHeuristic(coordinates coordinate) {
 		if (_heuristic.contains(coordinate))
 			return _heuristic.at(coordinate);
 		return -1;
 	}
 
-	float getTotalEstimatedCost(coordinates coordinate) { 
+	int getTotalEstimatedCost(coordinates coordinate) { 
 		if (_heuristic.contains(coordinate) && _cost_so_far.contains(coordinate))
 			return _heuristic.at(coordinate) + _cost_so_far.at(coordinate); 
 		return -1;

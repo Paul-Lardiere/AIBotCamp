@@ -101,7 +101,7 @@ void MyBotLogic::GetTurnOrders(const STurnData& _turnData, std::list<SOrder>& _o
 
 
 	
-	if (!_graph.hasEnoughGoals(_turnData.npcInfoArraySize)) {
+	if (!_graph.hasEnoughGoals(_turnData.npcInfoArraySize, _turnData.npcInfoArray)) {
 		BOT_LOGIC_LOG(mLogger, "exploration", true);
 
 		exploration(_turnData,_orders);
@@ -169,7 +169,7 @@ std::vector<EHexCellDirection> MyBotLogic::PathFinderAStar(SNPCInfo npcCurrent, 
 	
 	// Initialize the record for the start node
 	Node* startNode = (_graph.getNode(Graph::coordinates{npcCurrent.q, npcCurrent.r}));
-	startNode->setCost_so_far(goalCoordinates, 0.f);
+	startNode->setCost_so_far(goalCoordinates, 0);
 	startNode->setHeuristic(goalCoordinates, heuristic.estimate(Graph::coordinates{npcCurrent.q, npcCurrent.r}));
 
 	// Initializing the record vectors
@@ -198,12 +198,12 @@ std::vector<EHexCellDirection> MyBotLogic::PathFinderAStar(SNPCInfo npcCurrent, 
 
 			// Get the estimated cost to the end tile
 			Node* endNode = currentAdjencyNode.second;
-			float endNodeCostSoFar = currentNode->getCost_so_far(goalCoordinates) + 1;
+			int endNodeCostSoFar = currentNode->getCost_so_far(goalCoordinates) + 1;
 
 			if (endNodeCostSoFar > maxTurnNb)
 				continue;
 
-			float endNodeHeuristic;
+			int endNodeHeuristic;
 
 			// If the end tile is closed we may have to skip or remove it from the closed list
 			if (find(begin(closedNodes), end(closedNodes), endNode) != end(closedNodes))
@@ -288,7 +288,7 @@ std::vector<EHexCellDirection> MyBotLogic::PathFinderAStar(SNPCInfo npcCurrent, 
 
 Node* MyBotLogic::FindClosestNode(std::vector<Node*> nodes, Graph::coordinates goalCoordinates)
 {
-	float minEstimatedTotalCost = nodes[0]->getTotalEstimatedCost(goalCoordinates);
+	int minEstimatedTotalCost = nodes[0]->getTotalEstimatedCost(goalCoordinates);
 	int indexMin = 0;
 
 	for (int i = 1; i < nodes.size(); i++)
