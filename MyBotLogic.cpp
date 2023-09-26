@@ -37,7 +37,8 @@ std::basic_ostream<A, B>& operator<<(std::basic_ostream<A, B>& s, const std::vec
 
 MyBotLogic::MyBotLogic()
 {
-	//Write Code Here
+	maxTourNb = -1;
+	nbNPC = -1;
 }
 
 MyBotLogic::~MyBotLogic()
@@ -113,7 +114,7 @@ std::vector<EHexCellDirection> MyBotLogic::PathFinderAStar(SNPCInfo npcCurrent, 
 	std::vector<Node*> openNodes{};
 	openNodes.push_back(startNode);
 	std::vector<Node*> closedNodes{};
-	Node* currentNode;
+	Node* currentNode{ startNode };
 
 	while (!openNodes.empty())
 	{

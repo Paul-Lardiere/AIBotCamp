@@ -156,18 +156,14 @@ Graph::coordinates Graph::GetClosestGoalInfo(SNPCInfo npcCurrent)
 	Graph::coordinates closestgoalCoordinates{-1, -1};
 
 	for (std::pair<Graph::coordinates, int> goal : _goals) {
-		if (goal.second == -1) // if not used by another npc
-		{
-			int indexGraphGoal = *(getNode(goal.first)->getIdGraph());
-			if (indexGraphNpc != indexGraphGoal)
-				continue;
+		if (isUsedByAnotherNPC(goal) || !hasSameGraphIndex(indexGraphNpc, goal))
+			continue;
 
-			distance = distanceHexCoordNpc(goal.first, npcCurrent);
-			if (minDist > distance)
-			{
-				minDist = distance;
-				closestgoalCoordinates = goal.first;
-			}
+		distance = distanceHexCoordNpc(goal.first, npcCurrent);
+		if (minDist > distance)
+		{
+			minDist = distance;
+			closestgoalCoordinates = goal.first;
 		}
 	}
 
@@ -204,21 +200,21 @@ std::string Graph::printGraph()
 bool Graph::hasEnoughGoals(int nbNpc, SNPCInfo* npcInfo)
 {
 	if (nbNpc > _goals.size())
-		return false;
+		return false; // Too many NPC compared to the number of goals
 
 	std::map<int, int> nbGoalsPerGraphIndex;
 	std::map<int, int> nbNPCPerGraphIndex;
 
 	for (std::pair<coordinates, int> goal : _goals)
-	{
 		++(nbGoalsPerGraphIndex[*getNode(goal.first)->getIdGraph()]);
-	}
+	
 	for (int npcIndex = 0; npcIndex < nbNpc; ++npcIndex)
 	{
-		int indexGraph = *(getNode(coordinates{ npcInfo[npcIndex].q, npcInfo[npcIndex].r })->getIdGraph());
-		++(nbNPCPerGraphIndex[indexGraph]);
-		if (nbNPCPerGraphIndex[indexGraph] > nbGoalsPerGraphIndex[indexGraph])
-			return false;
+		int indexGraphNPC = *(getNode(coordinates{ npcInfo[npcIndex].q, npcInfo[npcIndex].r })->getIdGraph());
+		++(nbNPCPerGraphIndex[indexGraphNPC]);
+
+		if (nbNPCPerGraphIndex[indexGraphNPC] > nbGoalsPerGraphIndex[indexGraphNPC])
+			return false; // Too many NPC compared to the number of goals in one graph index
 	}
 
 	return true;

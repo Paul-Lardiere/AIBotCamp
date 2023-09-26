@@ -17,8 +17,8 @@ private:
 	std::map<coordinates, Node*> _nodes;
 	std::map<coordinates, STileInfo> _initMap;
 	std::map<coordinates, STileInfo> _updateMap;
-	SObjectInfo* _objectInfoArray;
-	int _objectInfoArraySize;
+	SObjectInfo* _objectInfoArray{};
+	int _objectInfoArraySize = -1;
 
 
 	Graph() = default;
@@ -30,6 +30,10 @@ private:
 	void addNode(Node* node);
 	void updateDirection(EHexCellDirection direction, int q, int r, Node* node);
 	bool isNotWalled(coordinates coordinateNode1, coordinates coordinateNode2, EHexCellDirection direction);
+
+	//conditions
+	bool isUsedByAnotherNPC(std::pair<Graph::coordinates, int> goal) { return goal.second == -1; };
+	bool hasSameGraphIndex(int indexGraphNPC, std::pair<Graph::coordinates, int> goal) { return indexGraphNPC == *(getNode(goal.first)->getIdGraph()); }
 
 public:
 
