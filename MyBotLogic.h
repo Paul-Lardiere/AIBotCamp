@@ -42,10 +42,13 @@ private:
 	void moveEachNPC(SNPCInfo* npcs, std::list<SOrder>& _orders);
 	void calculateAndInitializePath(int idNPC, SNPCInfo npc);
 	void applyModificationsToGraph(coordinates coordNPC, coordinates coordDest, int idNPC);
+	Node* searchNextTileToTheGoal(Node* currentNode, coordinates goalCoordinates, std::vector<EHexCellDirection>& path);
 
 	// conditions
 	bool allGoalsAreAssigned() { return _goalForEachNpc.size() == nbNPC; };
 	bool hasArrived(int idNPC) { return _pathPositionForEachNpc[idNPC] == _pathForEachNpc[idNPC].size(); }
+	bool goalFound(Node* currentNode) {	return currentNode->getTileInfo().type == EHexCellType::Goal; }
+	bool isNextTileToTheStart(Node* nodeAdjency, Node* currentNode, coordinates goalCoordinates);
 
 public:
 	MyBotLogic();

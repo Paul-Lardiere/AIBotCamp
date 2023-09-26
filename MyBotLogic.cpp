@@ -144,7 +144,7 @@ std::vector<EHexCellDirection> MyBotLogic::PathFinderAStar(SNPCInfo npcCurrent, 
 			int endNodeHeuristic;
 
 			// If the end tile is closed we may have to skip or remove it from the closed list
-			if (find(begin(closedNodes), end(closedNodes), endNode) != end(closedNodes))
+			if (find(begin(closedNodes), end(closedNodes), endNode) != end(closedNodes)) // TODO : same as the openedOnes
 			{
 				// if we didn't find a shorter route, skip
 				if ((endNode->getCost_so_far(goalCoordinates) <= endNodeCostSoFar))
@@ -157,7 +157,7 @@ std::vector<EHexCellDirection> MyBotLogic::PathFinderAStar(SNPCInfo npcCurrent, 
 				endNodeHeuristic = endNode->getTotalEstimatedCost(goalCoordinates) - endNode->getCost_so_far(goalCoordinates);
 			}
 			// skip if the tile is open and we've not found a better route
-			else if (find(begin(openNodes), end(openNodes), endNode) != end(openNodes))
+			else if (find(begin(openNodes), end(openNodes), endNode) != end(openNodes)) // TODO : same as the closedOnes
 			{
 				// If our route is not better then skip
 				if ((endNode->getCost_so_far(goalCoordinates) <= endNodeCostSoFar))
@@ -192,36 +192,19 @@ std::vector<EHexCellDirection> MyBotLogic::PathFinderAStar(SNPCInfo npcCurrent, 
 		closedNodes.push_back(currentNode);
 	}
 
-	// Find if we have found the goal or we ran out of tiles
-	if (currentNode->getTileInfo().type != EHexCellType::Goal)
-	{
+	// Find if we have found the goal
+	if (!goalFound(currentNode))
 		return std::vector<EHexCellDirection>{}; // No solutions
-	}
-	else
-	{
-		// compile the list of connections in the path
-		std::vector<EHexCellDirection> path{};
+	
+	// compile the list of connections in the path
+	std::vector<EHexCellDirection> path{};
 
-		while (currentNode != startNode)
-		{
-			// Search for the next tile closest to the start 
-			Node::adjencyList adjencyList = currentNode->getAdjencyList();
+	while (currentNode != startNode)
+		currentNode = searchNextTileToTheGoal(currentNode, goalCoordinates, path);
 
-			for (std::pair<EHexCellDirection, Node*> nodeAdjency : adjencyList)
-			{
-				if (nodeAdjency.second->getCost_so_far(goalCoordinates) == currentNode->getCost_so_far(goalCoordinates) - 1)
-				{
-					path.push_back(allDirectionReversed[nodeAdjency.first]);
-					currentNode = nodeAdjency.second;
-					break;
-				}
-			}
-		}
+	std::reverse(begin(path), end(path));
 
-		std::reverse(begin(path), end(path));
-
-		return path;
-	}
+	return path;
 }
 
 Node* MyBotLogic::FindClosestNode(std::vector<Node*> nodes, Graph::coordinates goalCoordinates)
@@ -337,6 +320,23 @@ void MyBotLogic::applyModificationsToGraph(coordinates coordNPC, coordinates coo
 		_graph.setFinished(coordDest);
 }
 
+Node* MyBotLogic::searchNextTileToTheGoal(Node* currentNode, coordinates goalCoordinates, std::vector<EHexCellDirection> &path)
+{
+	// Search for the next tile closest to the start 
+	Node::adjencyList adjencyList = currentNode->getAdjencyList();
+
+	for (std::pair<EHexCellDirection, Node*> nodeAdjency : adjencyList)
+	{
+		if (!isNextTileToTheStart(nodeAdjency.second, currentNode, goalCoordinates))
+			continue;
+		
+		path.push_back(allDirectionReversed[nodeAdjency.first]); // Ajout de la direction inverse dans le path
+		currentNode = nodeAdjency.second;
+		break;
+	}
+	return currentNode;
+}
+
 MyBotLogic::coordinates MyBotLogic::getCoordinatesDirection(coordinates coordinate, EHexCellDirection direction)
 {
 	coordinates coordDest = coordinate;
@@ -367,4 +367,12 @@ MyBotLogic::coordinates MyBotLogic::getCoordinatesDirection(coordinates coordina
 	}
 
 	return coordDest;
+}
+
+bool MyBotLogic::isNextTileToTheStart(Node* nodeAdjency, Node* currentNode, coordinates goalCoordinates)
+{
+	int CostSoFarAdjNode = nodeAdjency->getCost_so_far(goalCoordinates);
+	int CostSoFarCurrentNode = currentNode->getCost_so_far(goalCoordinates);
+
+	return (CostSoFarAdjNode == CostSoFarCurrentNode - 1);
 }
