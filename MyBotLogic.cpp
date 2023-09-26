@@ -37,7 +37,8 @@ std::basic_ostream<A, B>& operator<<(std::basic_ostream<A, B>& s, const std::vec
 
 MyBotLogic::MyBotLogic()
 {
-	//Write Code Here
+	maxTourNb = -1;
+	nbNPC = -1;
 }
 
 MyBotLogic::~MyBotLogic()
