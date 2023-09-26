@@ -9,7 +9,6 @@
 void Node::addToAdjencyList(EHexCellDirection direction, Node* node)
 {
 	_adjencyList.insert({ std::pair<EHexCellDirection, Node*>(direction, node) });
-
 }
 
 

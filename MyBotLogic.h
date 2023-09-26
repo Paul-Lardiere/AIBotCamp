@@ -31,11 +31,28 @@ private:
 	std::map<int, std::vector<EHexCellDirection>> _pathForEachNpc;
 	std::map<int, int> _pathPositionForEachNpc;
 	int maxTourNb;
+	int nbNPC;
 
 	std::vector<EHexCellDirection> PathFinderAStar(SNPCInfo npcCurrent, Heuristic heuristic, int maxTurnNb);
 	Node* FindClosestNode(std::vector<Node*> nodes, Graph::coordinates goalCoordinates);
 	void exploration(const STurnData& _turndata, std::list<SOrder>& _orders);
 	coordinates getCoordinatesDirection(coordinates coordinate, EHexCellDirection direction);
+	void assigneGoalsToEachNPC(SNPCInfo* npcs);
+	void calculatePathToEachNPC(SNPCInfo* npcs);
+	void moveEachNPC(SNPCInfo* npcs, std::list<SOrder>& _orders);
+	void calculateAndInitializePath(int idNPC, SNPCInfo npc);
+	void applyModificationsToGraph(coordinates coordNPC, coordinates coordDest, int idNPC);
+	Node* searchNextTileToTheGoal(Node* currentNode, coordinates goalCoordinates, std::vector<EHexCellDirection>& path);
+	int eraseFromVectorAndGetHeuristic(std::vector<Node*>& nodeVector, Node* endNode, coordinates goalCoordinates);
+
+	// conditions
+	bool allGoalsAreAssigned() { return _goalForEachNpc.size() == nbNPC; };
+	bool hasArrived(int idNPC) { return _pathPositionForEachNpc[idNPC] == _pathForEachNpc[idNPC].size(); }
+	bool goalFound(Node* currentNode) {	return currentNode->getTileInfo().type == EHexCellType::Goal; }
+	bool isNextTileToTheStart(Node* nodeAdjency, Node* currentNode, coordinates goalCoordinates);
+	bool nodeVectorContains(std::vector<Node*> nodeVector, Node* nodeToFind) { return find(begin(nodeVector), end(nodeVector), nodeToFind) != end(nodeVector); }
+	bool isShorterPath(Node* otherNode, int currentCostSoFar, coordinates goalCoordinates) { return (otherNode->getCost_so_far(goalCoordinates) > currentCostSoFar); }
+
 public:
 	MyBotLogic();
 	virtual ~MyBotLogic();

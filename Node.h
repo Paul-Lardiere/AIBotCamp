@@ -16,7 +16,7 @@ private:
 	// cost so far du noeud pour arriver au goal qui se trouve au coordoonées en clé
 	std::map<coordinates, int> _cost_so_far;
 	std::map<coordinates, int> _heuristic;
-	int* _idGraph;
+	int* _idGraph{};
 	bool _occupied = false;
 
 public:
@@ -28,8 +28,6 @@ public:
 	void addToAdjencyList(EHexCellDirection direction, Node* node);
 	bool inAdjacentList(EHexCellDirection direction);
 	adjencyList& getAdjencyList() { return _adjencyList; };
-
-	EHexCellDirection getBetterDirection();
 
 	Node* getNodeDirection(EHexCellDirection direction);
 	STileInfo getTileInfo() { return _tile; };
