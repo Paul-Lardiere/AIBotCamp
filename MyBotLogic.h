@@ -31,11 +31,22 @@ private:
 	std::map<int, std::vector<EHexCellDirection>> _pathForEachNpc;
 	std::map<int, int> _pathPositionForEachNpc;
 	int maxTourNb;
+	int nbNPC;
 
 	std::vector<EHexCellDirection> PathFinderAStar(SNPCInfo npcCurrent, Heuristic heuristic, int maxTurnNb);
 	Node* FindClosestNode(std::vector<Node*> nodes, Graph::coordinates goalCoordinates);
 	void exploration(const STurnData& _turndata, std::list<SOrder>& _orders);
 	coordinates getCoordinatesDirection(coordinates coordinate, EHexCellDirection direction);
+	void assigneGoalsToEachNPC(SNPCInfo* npcs);
+	void calculatePathToEachNPC(SNPCInfo* npcs);
+	void moveEachNPC(SNPCInfo* npcs, std::list<SOrder>& _orders);
+	void calculateAndInitializePath(int idNPC, SNPCInfo npc);
+	void applyModificationsToGraph(coordinates coordNPC, coordinates coordDest, int idNPC);
+
+	// conditions
+	bool allGoalsAreAssigned() { return _goalForEachNpc.size() == nbNPC; };
+	bool hasArrived(int idNPC) { return _pathPositionForEachNpc[idNPC] == _pathForEachNpc[idNPC].size(); }
+
 public:
 	MyBotLogic();
 	virtual ~MyBotLogic();

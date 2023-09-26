@@ -58,106 +58,43 @@ void MyBotLogic::Configure(const SConfigData& _configData)
 
 void MyBotLogic::Init(const SInitData& _initData)
 {
-	SNPCInfo* npcCurrent = _initData.npcInfoArray;
-
 	BOT_LOGIC_LOG(mLogger, "Init", true);
 	_graph.InitGraph(_initData.tileInfoArraySize, _initData.tileInfoArray, _initData.objectInfoArray, _initData.objectInfoArraySize, _initData.npcInfoArray, _initData.nbNPCs);
+
+	BOT_LOGIC_LOG(mLogger, "Graph lors de l'initialisation", true);
 	BOT_LOGIC_LOG(mLogger, _graph.printGraph(), true);
 
 	maxTourNb = _initData.maxTurnNb;
-
-	/*
-	// Reinitialisation of the NPC
-	npcCurrent = _initData.npcInfoArray;
-	maxTourNb = _initData.maxTurnNb;
-	// Calculate the path for each NPC
-	for (int i = 0; i < _initData.nbNPCs; i++)
-	{
-		_pathForEachNpc[npcCurrent[i].uid] = PathFinderAStar(npcCurrent[i], Heuristic{ _goalForEachNpc[npcCurrent[i].uid] }, maxTourNb);
-		_pathPositionForEachNpc[npcCurrent[i].uid] = 0;
-		_graph.setOccupiedNode(coordinates{ npcCurrent[i].q, npcCurrent[i].r }, true);
-	}
-	*/
-	
+	nbNPC = _initData.nbNPCs;
 }
 
 void MyBotLogic::GetTurnOrders(const STurnData& _turnData, std::list<SOrder>& _orders)
 {
-	//BOT_LOGIC_LOG(mLogger, std::format("graph:"), true);
-	//for (int i = 0; i < _turnData.tileInfoArraySize; ++i)
-	//{
-	//	BOT_LOGIC_LOG(mLogger, std::format("({},{}), type:{}", _turnData.tileInfoArray[i].q, _turnData.tileInfoArray[i].r, static_cast<int>(_turnData.tileInfoArray[i].type)), true);
-	//}
+	/*
+	BOT_LOGIC_LOG(mLogger, std::format("graph:"), true);
+	for (int i = 0; i < _turnData.tileInfoArraySize; ++i)
+	{
+		BOT_LOGIC_LOG(mLogger, std::format("({},{}), type:{}", _turnData.tileInfoArray[i].q, _turnData.tileInfoArray[i].r, static_cast<int>(_turnData.tileInfoArray[i].type)), true);
+	}
+	*/
 
+	// Update the graph in case we discover new tiles from exploration
+	_graph.updateGraph(_turnData.tileInfoArraySize, _turnData.tileInfoArray, _turnData.objectInfoArray, _turnData.objectInfoArraySize, _turnData.npcInfoArray, nbNPC);
 
-
-	SNPCInfo* npcCurrent = _turnData.npcInfoArray;
-	_graph.updateGraph(_turnData.tileInfoArraySize, _turnData.tileInfoArray, _turnData.objectInfoArray, _turnData.objectInfoArraySize, _turnData.npcInfoArray, _turnData.npcInfoArraySize);
-	
-	/*BOT_LOGIC_LOG(mLogger, _graph.printGraph(), true);
-	BOT_LOGIC_LOG(mLogger, std::format("{}",_goalForEachNpc.size()), true);	
-
-	BOT_LOGIC_LOG(mLogger, std::format("{}", _graph._goals.size()), true);*/
-
-
-	
-	if (!_graph.hasEnoughGoals(_turnData.npcInfoArraySize, _turnData.npcInfoArray)) {
-		BOT_LOGIC_LOG(mLogger, "exploration", true);
-
-		exploration(_turnData,_orders);
+	if (!_graph.hasEnoughGoals(nbNPC, _turnData.npcInfoArray)) {
+		BOT_LOGIC_LOG(mLogger, "exploration", true); 
+		exploration(_turnData, _orders); // Search for goals
 	}
 	else
 	{
-		if (_goalForEachNpc.size() < _turnData.npcInfoArraySize)
-		{
-			for (int i = 0; i < _turnData.npcInfoArraySize; i++)
-			{
-				coordinates coordGoal = _graph.GetClosestGoalInfo(npcCurrent[i]);
-				if (coordGoal != coordinates{-1, -1})
-					_goalForEachNpc[npcCurrent[i].uid] = coordGoal;
-			}
-			// Reinitialisation of the NPC
-			npcCurrent = _turnData.npcInfoArray;
-			// Calculate the path for each NPC
-			for (int i = 0; i < _turnData.npcInfoArraySize; i++)
-			{
-				_pathForEachNpc[npcCurrent[i].uid] = PathFinderAStar(npcCurrent[i], Heuristic{ _goalForEachNpc[npcCurrent[i].uid] }, maxTourNb);
-				_pathPositionForEachNpc[npcCurrent[i].uid] = 0;
-				_graph.setOccupiedNode(coordinates{ npcCurrent[i].q, npcCurrent[i].r }, true);
-			}
+		SNPCInfo* npcs = _turnData.npcInfoArray;
+
+		if (!allGoalsAreAssigned()) {
+			assigneGoalsToEachNPC(npcs);
+			calculatePathToEachNPC(npcs);
 		}
 
-		for (int i = 0; i < _turnData.npcInfoArraySize; i++)
-		{
-			if (_pathPositionForEachNpc[npcCurrent[i].uid] < _pathForEachNpc[npcCurrent[i].uid].size())
-			{
-				EHexCellDirection dir = _pathForEachNpc[npcCurrent[i].uid][_pathPositionForEachNpc[npcCurrent[i].uid]];
-
-				coordinates coordDest = getCoordinatesDirection(coordinates{ npcCurrent[i].q, npcCurrent[i].r }, dir);
-
-				if (_graph.isFinished(coordDest))
-				{
-					// Calcul again A*
-					_pathForEachNpc[npcCurrent[i].uid] = PathFinderAStar(npcCurrent[i], Heuristic{ _goalForEachNpc[npcCurrent[i].uid] }, maxTourNb);
-					_pathPositionForEachNpc[npcCurrent[i].uid] = 0;
-				}
-				else if (!_graph.IsNodeOccupied(coordDest))
-				{
-					// We free the old node
-					_graph.setOccupiedNode(coordinates{ npcCurrent[i].q, npcCurrent[i].r }, false);
-					// We go on the next node
-					_graph.setOccupiedNode(coordDest, true);
-					_pathPositionForEachNpc[npcCurrent[i].uid] += 1;
-
-					if (_pathPositionForEachNpc[npcCurrent[i].uid] == _pathForEachNpc[npcCurrent[i].uid].size())
-						_graph.setFinished(coordDest);
-
-					// Give the order to the npc
-					SOrder order = { EOrderType::Move, npcCurrent[i].uid, dir };
-					_orders.push_back(order);
-				}
-			}
-		}
+		moveEachNPC(npcs, _orders);
 	}
 }
 
@@ -305,8 +242,6 @@ Node* MyBotLogic::FindClosestNode(std::vector<Node*> nodes, Graph::coordinates g
 
 void MyBotLogic::exploration(const STurnData& turnData, std::list<SOrder>& _orders)
 {
-
-
 	for (int i = 0; i < turnData.npcInfoArraySize; ++i) {
 		coordinates coordNPC{ turnData.npcInfoArray[i].q, turnData.npcInfoArray[i].r };
 		Node *node = _graph.getNode(coordNPC);
@@ -326,12 +261,79 @@ void MyBotLogic::exploration(const STurnData& turnData, std::list<SOrder>& _orde
 		}
 
 		SOrder order = { EOrderType::Move, turnData.npcInfoArray[i].uid, direction};
-		_graph.addTimesExplored(getCoordinatesDirection(coordNPC, direction ));
+
+		coordinates coordDest = getCoordinatesDirection(coordNPC, direction);
+
+		_graph.addTimesExplored(coordDest);
 		_graph.setOccupiedNode(coordNPC, false);
-		_graph.setOccupiedNode(getCoordinatesDirection(coordNPC, direction), true);
+		_graph.setOccupiedNode(coordDest, true);
+
 		_orders.push_back(order);
 	}
 
+}
+
+void MyBotLogic::assigneGoalsToEachNPC(SNPCInfo* npcs)
+{
+	for (int i = 0; i < nbNPC; i++)
+		_goalForEachNpc[npcs[i].uid] = _graph.GetClosestGoalInfo(npcs[i]);
+}
+
+void MyBotLogic::calculatePathToEachNPC(SNPCInfo* npcs)
+{
+	for (int i = 0; i < nbNPC; i++)
+	{
+		int idNPC = npcs[i].uid;
+		coordinates coordNPC{ npcs[i].q, npcs[i].r };
+
+		calculateAndInitializePath(idNPC, npcs[i]);
+		_graph.setOccupiedNode(coordNPC, true);
+	}
+}
+
+void MyBotLogic::moveEachNPC(SNPCInfo* npcs, std::list<SOrder>& _orders)
+{
+	for (int i = 0; i < nbNPC; i++)
+	{
+		int idNPC = npcs[i].uid;
+
+		if (hasArrived(idNPC))
+			continue;
+
+		coordinates coordNPC{ npcs[i].q, npcs[i].r };
+		EHexCellDirection direction = _pathForEachNpc[idNPC][_pathPositionForEachNpc[idNPC]];
+		coordinates coordDest = getCoordinatesDirection(coordNPC, direction);
+
+		if (_graph.isNodeFinished(coordDest)) // If a npc is at destination on the next tile and will not move again
+			calculateAndInitializePath(idNPC, npcs[i]); // Calcul again A* to find another path to the goal
+			
+		if (_graph.IsNodeOccupied(coordDest))
+			continue; // we wait if out next tile is occupied
+
+		applyModificationsToGraph(coordNPC, coordDest, idNPC);
+
+		// Give the order to the npc
+		SOrder order = { EOrderType::Move, idNPC, direction };
+		_orders.push_back(order);
+	}
+}
+
+void MyBotLogic::calculateAndInitializePath(int idNPC, SNPCInfo npc)
+{
+	_pathForEachNpc[idNPC] = PathFinderAStar(npc, Heuristic{ _goalForEachNpc[idNPC] }, maxTourNb);
+	_pathPositionForEachNpc[idNPC] = 0;
+}
+
+void MyBotLogic::applyModificationsToGraph(coordinates coordNPC, coordinates coordDest, int idNPC)
+{
+	// We free the old node
+	_graph.setOccupiedNode(coordNPC, false);
+	// We go on the next node
+	_graph.setOccupiedNode(coordDest, true);
+	_pathPositionForEachNpc[idNPC] += 1;
+
+	if (_pathPositionForEachNpc[idNPC] == _pathForEachNpc[idNPC].size())
+		_graph.setFinished(coordDest);
 }
 
 MyBotLogic::coordinates MyBotLogic::getCoordinatesDirection(coordinates coordinate, EHexCellDirection direction)

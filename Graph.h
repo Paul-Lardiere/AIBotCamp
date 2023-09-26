@@ -61,7 +61,7 @@ public:
 	void setOccupiedNode(coordinates coord, bool isOccupied) { _nodes[coord]->setOccupied(isOccupied); }
 	bool IsNodeOccupied(coordinates coord) { return _nodes[coord]->isOccupied(); }
 
-	bool isFinished(coordinates coord) { return _nodes[coord]->finished; }
+	bool isNodeFinished(coordinates coord) { return _nodes[coord]->finished; }
 	void setFinished(coordinates coord) { _nodes[coord]->finished = true; }
 	
 	void addTimesExplored(coordinates coord) { ++_nodes[coord]->timesExplored; }
