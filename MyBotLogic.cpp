@@ -308,7 +308,8 @@ void MyBotLogic::exploration(const STurnData& turnData, std::list<SOrder>& _orde
 
 
 	for (int i = 0; i < turnData.npcInfoArraySize; ++i) {
-		Node *node = _graph.getNode(coordinates{ turnData.npcInfoArray[i].q, turnData.npcInfoArray[i].r });
+		coordinates coordNPC{ turnData.npcInfoArray[i].q, turnData.npcInfoArray[i].r };
+		Node *node = _graph.getNode(coordNPC);
 		Node::adjencyList adjacentNodes = node->getAdjencyList();
 
 		int mini = turnData.tileInfoArraySize;
@@ -317,7 +318,7 @@ void MyBotLogic::exploration(const STurnData& turnData, std::list<SOrder>& _orde
 		// Loop through each connections
 		for (std::pair<EHexCellDirection, Node*> currentAdjencyNode : adjacentNodes)
 		{
-			if (currentAdjencyNode.second->timesExplored < mini)
+			if (currentAdjencyNode.second->timesExplored < mini && !currentAdjencyNode.second->isOccupied())
 			{
 				mini = currentAdjencyNode.second->timesExplored;
 				direction = currentAdjencyNode.first;
@@ -325,7 +326,9 @@ void MyBotLogic::exploration(const STurnData& turnData, std::list<SOrder>& _orde
 		}
 
 		SOrder order = { EOrderType::Move, turnData.npcInfoArray[i].uid, direction};
-		_graph.addTimesExplored(getCoordinatesDirection(coordinates{ turnData.npcInfoArray[i].q, turnData.npcInfoArray[i].r }, direction ));
+		_graph.addTimesExplored(getCoordinatesDirection(coordNPC, direction ));
+		_graph.setOccupiedNode(coordNPC, false);
+		_graph.setOccupiedNode(getCoordinatesDirection(coordNPC, direction), true);
 		_orders.push_back(order);
 	}
 
