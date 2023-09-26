@@ -61,7 +61,7 @@ void MyBotLogic::Init(const SInitData& _initData)
 	SNPCInfo* npcCurrent = _initData.npcInfoArray;
 
 	BOT_LOGIC_LOG(mLogger, "Init", true);
-	_graph.InitGraph(_initData.tileInfoArraySize, _initData.tileInfoArray, _initData.objectInfoArray, _initData.objectInfoArraySize, coordinates{npcCurrent[0].q, npcCurrent[0].r});
+	_graph.InitGraph(_initData.tileInfoArraySize, _initData.tileInfoArray, _initData.objectInfoArray, _initData.objectInfoArraySize, _initData.npcInfoArray, _initData.nbNPCs);
 	BOT_LOGIC_LOG(mLogger, _graph.printGraph(), true);
 
 	maxTourNb = _initData.maxTurnNb;
@@ -83,20 +83,21 @@ void MyBotLogic::Init(const SInitData& _initData)
 
 void MyBotLogic::GetTurnOrders(const STurnData& _turnData, std::list<SOrder>& _orders)
 {
-	BOT_LOGIC_LOG(mLogger, std::format("graph:"), true);
-	for (int i = 0; i < _turnData.tileInfoArraySize; ++i)
-	{
-		BOT_LOGIC_LOG(mLogger, std::format("({},{}), type:{}", _turnData.tileInfoArray[i].q, _turnData.tileInfoArray[i].r, static_cast<int>(_turnData.tileInfoArray[i].type)), true);
-	}
+	//BOT_LOGIC_LOG(mLogger, std::format("graph:"), true);
+	//for (int i = 0; i < _turnData.tileInfoArraySize; ++i)
+	//{
+	//	BOT_LOGIC_LOG(mLogger, std::format("({},{}), type:{}", _turnData.tileInfoArray[i].q, _turnData.tileInfoArray[i].r, static_cast<int>(_turnData.tileInfoArray[i].type)), true);
+	//}
 
 
 
 	SNPCInfo* npcCurrent = _turnData.npcInfoArray;
-	_graph.updateGraph(_turnData.tileInfoArraySize, _turnData.tileInfoArray, _turnData.objectInfoArray, _turnData.objectInfoArraySize, coordinates{ npcCurrent[0].q, npcCurrent[0].r });
-	BOT_LOGIC_LOG(mLogger, _graph.printGraph(), true);
+	_graph.updateGraph(_turnData.tileInfoArraySize, _turnData.tileInfoArray, _turnData.objectInfoArray, _turnData.objectInfoArraySize, _turnData.npcInfoArray, _turnData.npcInfoArraySize);
+	
+	/*BOT_LOGIC_LOG(mLogger, _graph.printGraph(), true);
 	BOT_LOGIC_LOG(mLogger, std::format("{}",_goalForEachNpc.size()), true);	
 
-	BOT_LOGIC_LOG(mLogger, std::format("{}", _graph._goals.size()), true);
+	BOT_LOGIC_LOG(mLogger, std::format("{}", _graph._goals.size()), true);*/
 
 
 	

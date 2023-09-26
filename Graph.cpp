@@ -8,7 +8,7 @@
 /// </summary>
 /// <param name="size"></param>
 /// <param name="_tileList"></param>
-void Graph::InitGraph(size_t size, const STileInfo* _tileList, SObjectInfo* objectInfoArray, int objectInfoArraySize, coordinates coordNPC)
+void Graph::InitGraph(size_t size, const STileInfo* _tileList, SObjectInfo* objectInfoArray, int objectInfoArraySize, SNPCInfo* npcInfoArray, int npcInfoArraySize)
 {
 	_objectInfoArray = objectInfoArray;
 	_objectInfoArraySize = objectInfoArraySize;
@@ -17,21 +17,25 @@ void Graph::InitGraph(size_t size, const STileInfo* _tileList, SObjectInfo* obje
 			_initMap[ coordinates {initTileInfo.q, initTileInfo.r}] = initTileInfo;
 		});
 
-	const STileInfo* tileNPC = std::find_if(_tileList + 0, _tileList + size, [&coordNPC](STileInfo tile) {
-		return ((tile.q == coordNPC.first) && (tile.r == coordNPC.second));
-		});
+	for (int i = 0; i < npcInfoArraySize; ++i) {
+		coordinates coordNPC{npcInfoArray[i].q,npcInfoArray[i].r };
+		const STileInfo* tileNPC = std::find_if(_tileList + 0, _tileList + size, [&coordNPC](STileInfo tile) {
+			return ((tile.q == coordNPC.first) && (tile.r == coordNPC.second));
+			});
 
-	Node* node = new Node(*tileNPC);
-	node->setIdGraph(0);
-	node->timesExplored = 1;
-	addNode(node);
-	createGraph(node);
+		Node* node = new Node(*tileNPC);
+		node->initIdGraph(new int{i});
+		node->timesExplored = 1;
+		addNode(node);
+		createGraph(node);
+	}
 }
 
 Graph::~Graph()
 {
 	for (auto it = _nodes.begin(); it != _nodes.end(); ++it)
 	{
+
 		delete it->second;
 	};
 }
@@ -62,7 +66,7 @@ void Graph::createGraph(Node* node)
 
 }
 
-void Graph::updateGraph(size_t size, const STileInfo* _tileList, SObjectInfo* objectInfoArray, int objectInfoArraySize, coordinates coordNPC)
+void Graph::updateGraph(size_t size, const STileInfo* _tileList, SObjectInfo* objectInfoArray, int objectInfoArraySize, SNPCInfo* npcInfoArray, int npcInfoArraySize)
 {
 	_initMap.clear();
 	_objectInfoArray = objectInfoArray;
@@ -71,8 +75,11 @@ void Graph::updateGraph(size_t size, const STileInfo* _tileList, SObjectInfo* ob
 		if (initTileInfo.type != Forbidden)
 			_initMap[coordinates {initTileInfo.q, initTileInfo.r}] = initTileInfo;
 		});
-	Node * node = _nodes[coordNPC];
-	createGraph(node);
+	for (int i = 0; i < npcInfoArraySize; ++i) {
+		coordinates coordNPC{ npcInfoArray[i].q,npcInfoArray[i].r };		
+		Node* node = _nodes[coordNPC];
+		createGraph(node);
+	}
 }
 
 void Graph::updateDirection(EHexCellDirection direction, int q, int r, Node* node)
@@ -83,6 +90,7 @@ void Graph::updateDirection(EHexCellDirection direction, int q, int r, Node* nod
 		if (!isInitialized(coordinates{ q, r })) {
 			newNode = new Node(_initMap[coordinates{ q, r }]);
 			addNode(newNode);
+			newNode->initIdGraph(node->getIdGraph());
 			node->addToAdjencyList(allDirection[direction], newNode);
 			newNode->addToAdjencyList(allDirectionReversed[direction], node);
 			createGraph(newNode);
@@ -92,6 +100,8 @@ void Graph::updateDirection(EHexCellDirection direction, int q, int r, Node* nod
 			newNode = _nodes[coordinates{ q, r }];
 			node->addToAdjencyList(allDirection[direction], newNode);
 			newNode->addToAdjencyList(allDirectionReversed[direction], node);
+			newNode->setIdGraph(*node->getIdGraph());
+			node->setIdGraph(*newNode->getIdGraph());
 		}
 
 
@@ -177,7 +187,7 @@ std::string Graph::printGraph()
 	std::string ret;
 	for (auto it = _nodes.cbegin(); it != _nodes.cend(); ++it)
 	{
-		ret += std::format("Node ({},{}) : type {}\n", it->second->getTileInfo().q, it->second->getTileInfo().r, static_cast<int>(it->second->getTileInfo().type));
+		ret += std::format("Node ({},{}) : idGraph {}\n", it->second->getTileInfo().q, it->second->getTileInfo().r, static_cast<int>(*it->second->getIdGraph()));
 		for (auto it2 = it->second->getAdjencyList().begin(); it2 != it->second->getAdjencyList().end(); ++it2)
 			ret += std::format("({},{}) ", it2->second->getTileInfo().q, it2->second->getTileInfo().r);
 		ret += "\n";
