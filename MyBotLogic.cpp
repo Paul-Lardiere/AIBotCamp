@@ -73,17 +73,18 @@ void MyBotLogic::GetTurnOrders(const STurnData& _turnData, std::list<SOrder>& _o
 {
 	
 	BOT_LOGIC_LOG(mLogger, std::format("graph:"), true);
-	for (int i = 0; i < _turnData.objectInfoArraySize; ++i)
-	{
-		BOT_LOGIC_LOG(mLogger, std::format("({},{}), type:{}", _turnData.objectInfoArray[i].q, _turnData.objectInfoArray[i].r, static_cast<int>(_turnData.objectInfoArray[i].cellPosition)), true);
-	}
-	
+	//for (int i = 0; i < _turnData.objectInfoArraySize; ++i)
+	//{
+	//	BOT_LOGIC_LOG(mLogger, std::format("({},{}), type:{}", _turnData.objectInfoArray[i].q, _turnData.objectInfoArray[i].r, static_cast<int>(_turnData.objectInfoArray[i].cellPosition)), true);
+	//}
+
 
 	// Update the graph in case we discover new tiles from exploration
 	_graph.updateGraph(_turnData.tileInfoArraySize, _turnData.tileInfoArray, _turnData.objectInfoArray, _turnData.objectInfoArraySize, _turnData.npcInfoArray, nbNPC);
-
+	BOT_LOGIC_LOG(mLogger, _graph.printGraph(), true);
 	if (!_graph.hasEnoughGoals(nbNPC, _turnData.npcInfoArray)) {
 		BOT_LOGIC_LOG(mLogger, "exploration", true); 
+		
 		exploration(_turnData,_orders); // Search for goals
 	}
 	else

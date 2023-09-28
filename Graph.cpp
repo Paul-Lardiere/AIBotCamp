@@ -73,6 +73,7 @@ void Graph::updateGraph(size_t size, const STileInfo* _tileList, SObjectInfo* ob
 		if (initTileInfo.type != Forbidden)
 			_initMap[coordinates {initTileInfo.q, initTileInfo.r}] = initTileInfo;
 		});
+
 	for (int i = 0; i < npcInfoArraySize; ++i) {
 		coordinates coordNPC{ npcInfoArray[i].q,npcInfoArray[i].r };		
 		Node* node = _nodes[coordNPC];
@@ -83,14 +84,14 @@ void Graph::updateGraph(size_t size, const STileInfo* _tileList, SObjectInfo* ob
 		if (isInitialized(coordObj) && (getNodes()[coordObj]->getAdjencyList().find(_objectInfoArray[i].cellPosition) != getNodes()[coordObj]->getAdjencyList().end()) && isInitialized(getNodes()[coordObj]->getNodeDirection(_objectInfoArray[i].cellPosition)->getNodeCoordinates())) {
 			getNodes()[coordObj]->getNodeDirection(_objectInfoArray[i].cellPosition)->getAdjencyList().erase(static_cast<EHexCellDirection>((_objectInfoArray[i].cellPosition + 3) % 6));
 			getNodes()[coordObj]->getAdjencyList().erase(_objectInfoArray[i].cellPosition);
-			
+
 		}
 	}
 }
 
 void Graph::updateDirection(EHexCellDirection direction, int q, int r, Node* node)
 {
-	if (!node->inAdjacentList(allDirection[direction]) && exist(coordinates{ q,r }) && isNotWalled(coordinates{ node->getTileInfo().q,node->getTileInfo().r }, coordinates{ q,r }, direction)) {
+	if (!node->inAdjacentList(allDirection[direction]) && exist(coordinates{ q,r })) {
 
 		Node* newNode;
 		if (!isInitialized(coordinates{ q, r })) {
