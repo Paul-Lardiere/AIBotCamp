@@ -71,13 +71,13 @@ void MyBotLogic::Init(const SInitData& _initData)
 
 void MyBotLogic::GetTurnOrders(const STurnData& _turnData, std::list<SOrder>& _orders)
 {
-	/*
+	
 	BOT_LOGIC_LOG(mLogger, std::format("graph:"), true);
-	for (int i = 0; i < _turnData.tileInfoArraySize; ++i)
+	for (int i = 0; i < _turnData.objectInfoArraySize; ++i)
 	{
-		BOT_LOGIC_LOG(mLogger, std::format("({},{}), type:{}", _turnData.tileInfoArray[i].q, _turnData.tileInfoArray[i].r, static_cast<int>(_turnData.tileInfoArray[i].type)), true);
+		BOT_LOGIC_LOG(mLogger, std::format("({},{}), type:{}", _turnData.objectInfoArray[i].q, _turnData.objectInfoArray[i].r, static_cast<int>(_turnData.objectInfoArray[i].cellPosition)), true);
 	}
-	*/
+	
 
 	// Update the graph in case we discover new tiles from exploration
 	_graph.updateGraph(_turnData.tileInfoArraySize, _turnData.tileInfoArray, _turnData.objectInfoArray, _turnData.objectInfoArraySize, _turnData.npcInfoArray, nbNPC);

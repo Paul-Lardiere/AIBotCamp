@@ -62,8 +62,6 @@ void Graph::createGraph(Node* node)
 	updateDirection(E, (tile.q), (tile.r) + 1, node);
 	updateDirection(SE, (tile.q) + 1, (tile.r), node);
 	updateDirection(SW, (tile.q) + 1, (tile.r) - 1, node);
-
-
 }
 
 void Graph::updateGraph(size_t size, const STileInfo* _tileList, SObjectInfo* objectInfoArray, int objectInfoArraySize, SNPCInfo* npcInfoArray, int npcInfoArraySize)
@@ -80,6 +78,14 @@ void Graph::updateGraph(size_t size, const STileInfo* _tileList, SObjectInfo* ob
 		Node* node = _nodes[coordNPC];
 		createGraph(node);
 	}
+	for (int i = 0; i < _objectInfoArraySize; i++) {
+		coordinates coordObj = coordinates{ _objectInfoArray[i].q, _objectInfoArray[i].r };
+		if (isInitialized(coordObj) && (getNodes()[coordObj]->getAdjencyList().find(_objectInfoArray[i].cellPosition) != getNodes()[coordObj]->getAdjencyList().end()) && isInitialized(getNodes()[coordObj]->getNodeDirection(_objectInfoArray[i].cellPosition)->getNodeCoordinates())) {
+			getNodes()[coordObj]->getNodeDirection(_objectInfoArray[i].cellPosition)->getAdjencyList().erase(static_cast<EHexCellDirection>((_objectInfoArray[i].cellPosition + 3) % 6));
+			getNodes()[coordObj]->getAdjencyList().erase(_objectInfoArray[i].cellPosition);
+			
+		}
+	}
 }
 
 void Graph::updateDirection(EHexCellDirection direction, int q, int r, Node* node)
@@ -94,7 +100,6 @@ void Graph::updateDirection(EHexCellDirection direction, int q, int r, Node* nod
 			node->addToAdjencyList(allDirection[direction], newNode);
 			newNode->addToAdjencyList(allDirectionReversed[direction], node);
 			createGraph(newNode);
-
 		}
 		else {
 			newNode = _nodes[coordinates{ q, r }];
@@ -103,12 +108,7 @@ void Graph::updateDirection(EHexCellDirection direction, int q, int r, Node* nod
 			newNode->setIdGraph(*node->getIdGraph());
 			node->setIdGraph(*newNode->getIdGraph());
 		}
-
-
 	}
-
-
-
 }
 
 /// <summary>
