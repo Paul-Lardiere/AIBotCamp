@@ -91,9 +91,10 @@ void MyBotLogic::GetTurnOrders(const STurnData& _turnData, std::list<SOrder>& _o
 	{
 		SNPCInfo* npcs = _turnData.npcInfoArray;
 
-		if (!allGoalsAreAssigned()) {
+		if (!allGoalsAreAssigned() ) {
 			assigneGoalsToEachNPC(npcs);
 			calculatePathToEachNPC(npcs);
+			
 		}
 
 		moveEachNPC(npcs, _orders);

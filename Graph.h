@@ -6,6 +6,7 @@
 #include <vector>
 
 
+
 using distance_type = int;
 
 class Graph
@@ -17,8 +18,11 @@ private:
 	std::map<coordinates, Node*> _nodes;
 	std::map<coordinates, STileInfo> _initMap;
 	std::map<coordinates, STileInfo> _updateMap;
-	SObjectInfo* _objectInfoArray{};
+	std::map<std::pair<coordinates,EHexCellDirection>,SObjectInfo*> _objectInfoArray;
 	int _objectInfoArraySize = -1;
+	int _idGraphUnaffected = 0;
+
+
 
 
 	Graph() = default;
@@ -30,10 +34,11 @@ private:
 	void addNode(Node* node);
 	void updateDirection(EHexCellDirection direction, int q, int r, Node* node);
 	bool isNotWalled(coordinates coordinateNode1, coordinates coordinateNode2, EHexCellDirection direction);
+	void updateIdGraph(Node* node, int id);
 
 	//conditions
 	bool isUsedByAnotherNPC(std::pair<Graph::coordinates, int> goal) { return goal.second != -1; };
-	bool hasSameGraphIndex(int indexGraphNPC, std::pair<Graph::coordinates, int> goal) { return indexGraphNPC == *(getNode(goal.first)->getIdGraph()); }
+	bool hasSameGraphIndex(int indexGraphNPC, std::pair<Graph::coordinates, int> goal) { return indexGraphNPC == getNode(goal.first)->getIdGraph(); }
 
 public:
 

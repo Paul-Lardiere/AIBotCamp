@@ -10,21 +10,22 @@
 /// <param name="_tileList"></param>
 void Graph::InitGraph(size_t size, const STileInfo* _tileList, SObjectInfo* objectInfoArray, int objectInfoArraySize, SNPCInfo* npcInfoArray, int npcInfoArraySize)
 {
-	_objectInfoArray = objectInfoArray;
-	_objectInfoArraySize = objectInfoArraySize;
+	for (auto it = objectInfoArray + 0;it != objectInfoArray + objectInfoArraySize; ++it)
+		_objectInfoArray[std::pair<coordinates, EHexCellDirection>{coordinates{ it->q,it->r }, it->cellPosition}] = it;
+	//_objectInfoArraySize = objectInfoArraySize;
 	std::for_each(_tileList, _tileList + size, [this](auto&& initTileInfo) {
 		if (initTileInfo.type != Forbidden)
-			_initMap[ coordinates {initTileInfo.q, initTileInfo.r}] = initTileInfo;
+			_initMap[coordinates{ initTileInfo.q, initTileInfo.r }] = initTileInfo;
 		});
 
 	for (int i = 0; i < npcInfoArraySize; ++i) {
-		coordinates coordNPC{npcInfoArray[i].q,npcInfoArray[i].r };
+		coordinates coordNPC{ npcInfoArray[i].q,npcInfoArray[i].r };
 		const STileInfo* tileNPC = std::find_if(_tileList + 0, _tileList + size, [&coordNPC](STileInfo tile) {
 			return ((tile.q == coordNPC.first) && (tile.r == coordNPC.second));
 			});
 
 		Node* node = new Node(*tileNPC);
-		node->initIdGraph(new int{i});
+		node->initIdGraph(++_idGraphUnaffected);
 		node->timesExplored = 1;
 		addNode(node);
 		createGraph(node);
@@ -66,50 +67,70 @@ void Graph::createGraph(Node* node)
 
 void Graph::updateGraph(size_t size, const STileInfo* _tileList, SObjectInfo* objectInfoArray, int objectInfoArraySize, SNPCInfo* npcInfoArray, int npcInfoArraySize)
 {
+
 	_initMap.clear();
-	_objectInfoArray = objectInfoArray;
+	for (auto it = objectInfoArray + 0;it != objectInfoArray + objectInfoArraySize; ++it)
+		_objectInfoArray[std::pair<coordinates, EHexCellDirection>{coordinates{ it->q,it->r }, it->cellPosition}] = it;
 	_objectInfoArraySize = objectInfoArraySize;
 	std::for_each(_tileList, _tileList + size, [this](auto&& initTileInfo) {
 		if (initTileInfo.type != Forbidden)
-			_initMap[coordinates {initTileInfo.q, initTileInfo.r}] = initTileInfo;
+			_initMap[coordinates{ initTileInfo.q, initTileInfo.r }] = initTileInfo;
 		});
 
 	for (int i = 0; i < npcInfoArraySize; ++i) {
-		coordinates coordNPC{ npcInfoArray[i].q,npcInfoArray[i].r };		
+		coordinates coordNPC{ npcInfoArray[i].q,npcInfoArray[i].r };
 		Node* node = _nodes[coordNPC];
 		createGraph(node);
 	}
-	for (int i = 0; i < _objectInfoArraySize; i++) {
-		coordinates coordObj = coordinates{ _objectInfoArray[i].q, _objectInfoArray[i].r };
-		if (isInitialized(coordObj) && (getNodes()[coordObj]->getAdjencyList().find(_objectInfoArray[i].cellPosition) != getNodes()[coordObj]->getAdjencyList().end()) && isInitialized(getNodes()[coordObj]->getNodeDirection(_objectInfoArray[i].cellPosition)->getNodeCoordinates())) {
-			getNodes()[coordObj]->getNodeDirection(_objectInfoArray[i].cellPosition)->getAdjencyList().erase(static_cast<EHexCellDirection>((_objectInfoArray[i].cellPosition + 3) % 6));
-			getNodes()[coordObj]->getAdjencyList().erase(_objectInfoArray[i].cellPosition);
+	for (auto it = _objectInfoArray.begin(); it != _objectInfoArray.end(); ++it) {
+		coordinates coordObj = coordinates{ it->second->q, it->second->r };
+		if (isInitialized(coordObj) && (getNodes()[coordObj]->getAdjencyList().find(it->second->cellPosition) != getNodes()[coordObj]->getAdjencyList().end()) && isInitialized(getNodes()[coordObj]->getNodeDirection(it->second->cellPosition)->getNodeCoordinates())) {
+			getNodes()[coordObj]->getNodeDirection(it->second->cellPosition)->getAdjencyList().erase(static_cast<EHexCellDirection>((it->second->cellPosition + 3) % 6));
+			getNodes()[coordObj]->getAdjencyList().erase(it->second->cellPosition);
+			getNode(coordObj)->initIdGraph(++_idGraphUnaffected);
 
 		}
+	}
+	for (int i = 0; i < npcInfoArraySize; ++i) {
+		coordinates coordNPC{ npcInfoArray[i].q,npcInfoArray[i].r };
+		updateIdGraph(_nodes[coordNPC], _nodes[coordNPC]->getIdGraph());
+		for (auto it = _nodes.begin(); it != _nodes.end(); ++it)
+			it->second->updated = false;
 	}
 }
 
 void Graph::updateDirection(EHexCellDirection direction, int q, int r, Node* node)
 {
+
 	if (!node->inAdjacentList(allDirection[direction]) && exist(coordinates{ q,r })) {
 
 		Node* newNode;
+
 		if (!isInitialized(coordinates{ q, r })) {
 			newNode = new Node(_initMap[coordinates{ q, r }]);
+			//newNode->initIdGraph(++_idGraphUnaffected );
 			addNode(newNode);
-			newNode->initIdGraph(node->getIdGraph());
+
+
+			//newNode->initIdGraph(node->getIdGraph());
 			node->addToAdjencyList(allDirection[direction], newNode);
 			newNode->addToAdjencyList(allDirectionReversed[direction], node);
+
+
 			createGraph(newNode);
 		}
 		else {
 			newNode = _nodes[coordinates{ q, r }];
+
 			node->addToAdjencyList(allDirection[direction], newNode);
 			newNode->addToAdjencyList(allDirectionReversed[direction], node);
-			newNode->setIdGraph(*node->getIdGraph());
-			node->setIdGraph(*newNode->getIdGraph());
+			/*newNode->setIdGraph(node->getIdGraph());
+			node->setIdGraph(newNode->getIdGraph());*/
+
 		}
+
 	}
+
 }
 
 /// <summary>
@@ -137,10 +158,23 @@ bool Graph::exist(coordinates coordinates)
 
 bool Graph::isNotWalled(coordinates coordinateNode1, coordinates coordinateNode2, EHexCellDirection direction)
 {
-	return std::find_if(_objectInfoArray + 0, _objectInfoArray + _objectInfoArraySize, [&](auto& objectInfo) {
-		return (objectInfo.q == coordinateNode1.first && objectInfo.r == coordinateNode1.second && objectInfo.cellPosition == direction)
-			|| (objectInfo.q == coordinateNode2.first && objectInfo.r == coordinateNode2.second && objectInfo.cellPosition == (direction + 3) % 6);
-		}) == _objectInfoArray + _objectInfoArraySize;
+	return std::find_if(_objectInfoArray.begin(), _objectInfoArray.end(), [&](auto& objectInfo) {
+		return (objectInfo.second->q == coordinateNode1.first && objectInfo.second->r == coordinateNode1.second && objectInfo.second->cellPosition == direction)
+			|| (objectInfo.second->q == coordinateNode2.first && objectInfo.second->r == coordinateNode2.second && objectInfo.second->cellPosition == (direction + 3) % 6);
+		}) == _objectInfoArray.end();
+}
+
+void Graph::updateIdGraph(Node* node, int id)
+{
+	if (node->updated == false) {
+		node->initIdGraph(id);
+		for (auto it = node->getAdjencyList().begin(); it != node->getAdjencyList().end(); ++it)
+		{
+			node->updated = true;
+			this->updateIdGraph(it->second, id);
+
+		}
+	}
 }
 
 bool Graph::isInitialized(coordinates coordinates)
@@ -152,9 +186,9 @@ Graph::coordinates Graph::GetClosestGoalInfo(SNPCInfo npcCurrent)
 {
 	size_t minDist = _size;
 	int distance;
-	int indexGraphNpc = *(getNode(coordinates{ npcCurrent.q, npcCurrent.r })->getIdGraph());
+	int indexGraphNpc = getNode(coordinates{ npcCurrent.q, npcCurrent.r })->getIdGraph();
 
-	Graph::coordinates closestgoalCoordinates{-1, -1};
+	Graph::coordinates closestgoalCoordinates{ -1, -1 };
 
 	for (std::pair<Graph::coordinates, int> goal : _goals) {
 		if (isUsedByAnotherNPC(goal) || !hasSameGraphIndex(indexGraphNpc, goal))
@@ -169,7 +203,7 @@ Graph::coordinates Graph::GetClosestGoalInfo(SNPCInfo npcCurrent)
 	}
 
 	// register the npc id for the closest goal
-	if (closestgoalCoordinates != coordinates{-1, -1})
+	if (closestgoalCoordinates != coordinates{ -1, -1 })
 		_goals[closestgoalCoordinates] = npcCurrent.uid;
 
 	return closestgoalCoordinates;
@@ -177,7 +211,7 @@ Graph::coordinates Graph::GetClosestGoalInfo(SNPCInfo npcCurrent)
 
 int Graph::distanceHexCoordNpc(coordinates coordinates, SNPCInfo npcInfo)
 {
-	int qdiff = coordinates.first -npcInfo.q;
+	int qdiff = coordinates.first - npcInfo.q;
 	int rdiff = coordinates.second - npcInfo.r;
 	int sdiff = -(qdiff + rdiff);
 
@@ -189,7 +223,7 @@ std::string Graph::printGraph()
 	std::string ret;
 	for (auto it = _nodes.cbegin(); it != _nodes.cend(); ++it)
 	{
-		ret += std::format("Node ({},{}) : idGraph {}\n", it->second->getTileInfo().q, it->second->getTileInfo().r, static_cast<int>(*it->second->getIdGraph()));
+		ret += std::format("Node ({},{}) : idGraph {}\n", it->second->getTileInfo().q, it->second->getTileInfo().r, static_cast<int>(it->second->getIdGraph()));
 		for (auto it2 = it->second->getAdjencyList().begin(); it2 != it->second->getAdjencyList().end(); ++it2)
 			ret += std::format("({},{}) ", it2->second->getTileInfo().q, it2->second->getTileInfo().r);
 		ret += "\n";
@@ -207,11 +241,11 @@ bool Graph::hasEnoughGoals(int nbNpc, SNPCInfo* npcInfo)
 	std::map<int, int> nbNPCPerGraphIndex;
 
 	for (std::pair<coordinates, int> goal : _goals)
-		++(nbGoalsPerGraphIndex[*getNode(goal.first)->getIdGraph()]);
-	
+		++(nbGoalsPerGraphIndex[getNode(goal.first)->getIdGraph()]);
+
 	for (int npcIndex = 0; npcIndex < nbNpc; ++npcIndex)
 	{
-		int indexGraphNPC = *(getNode(coordinates{ npcInfo[npcIndex].q, npcInfo[npcIndex].r })->getIdGraph());
+		int indexGraphNPC = (getNode(coordinates{ npcInfo[npcIndex].q, npcInfo[npcIndex].r })->getIdGraph());
 		++(nbNPCPerGraphIndex[indexGraphNPC]);
 
 		if (nbNPCPerGraphIndex[indexGraphNPC] > nbGoalsPerGraphIndex[indexGraphNPC])
