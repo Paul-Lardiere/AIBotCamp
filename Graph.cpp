@@ -111,12 +111,7 @@ void Graph::updateGraph(size_t nbTiles, const STileInfo* _tileList, SObjectInfo*
 
 void Graph::updateDirection(EHexCellDirection direction, int q, int r, Node* node, const STileInfo* tiles, int nbTiles)
 {
-	// si la destination est dans le champ de vision
-	bool statement = std::find_if(tiles + 0, tiles + nbTiles, [r, q](auto&& tile) {
-		return q == tile.q && r == tile.r;
-		}) != tiles+nbTiles;
-
-	if (exist(coordinates{ q,r }) && !node->inAdjacentList(allDirection[direction]) && statement) {
+	if (exist(coordinates{ q,r }) && !node->inAdjacentList(allDirection[direction])) {
 
 		if (!isInitialized(coordinates{ q, r })) {
 			Node* newNode = new Node(_initMap[coordinates{ q, r }]);
@@ -145,12 +140,9 @@ void Graph::updateDirection(EHexCellDirection direction, int q, int r, Node* nod
 
 void Graph::updateDirectionBis(EHexCellDirection direction, int q, int r, Node* node, const STileInfo* tiles, int nbTiles)
 {
-	// si la destination est dans le champ de vision
-	bool statement = std::find_if(tiles + 0, tiles + nbTiles, [r, q](auto&& tile) {
-		return q == tile.q && r == tile.r;
-		}) != tiles + nbTiles;
+	bool isGoal = exist(coordinates{ q,r }) && (_initMap[coordinates{ q,r }].type == EHexCellType::Goal);
 
-	if (exist(coordinates{ q,r }) && !node->inAdjacentList(allDirection[direction])) {
+	if (exist(coordinates{ q,r }) && !node->inAdjacentList(allDirection[direction]) && !isGoal) {
 		Node* destNode;
 
 		if (!isInitialized(coordinates{ q, r })) {

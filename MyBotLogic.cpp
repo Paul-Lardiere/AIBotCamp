@@ -72,8 +72,8 @@ void MyBotLogic::Init(const SInitData& _initData)
 void MyBotLogic::GetTurnOrders(const STurnData& _turnData, std::list<SOrder>& _orders)
 {
 	//BOT_LOGIC_LOG(mLogger, std::format("================================="), true);
-	//BOT_LOGIC_LOG(mLogger, std::format("turn : {}", _turnData.turnNb), true);
-	
+	BOT_LOGIC_LOG(mLogger, std::format("turn : {}", _turnData.turnNb), true);
+	BOT_LOGIC_LOG(mLogger, std::format("npc_position ({},{})", _turnData.npcInfoArray[0].q, _turnData.npcInfoArray[0].r), true);
 
 	/*BOT_LOGIC_LOG(mLogger, std::format("Objects"), true);
 	for (int i = 0; i < _turnData.objectInfoArraySize; ++i)
@@ -248,7 +248,7 @@ void MyBotLogic::exploration(const STurnData& turnData, std::list<SOrder>& _orde
 		Node *node = _graph.getNode(coordNPC);
 		Node::adjencyList adjacentNodes = node->getAdjencyList();
 
-		int mini = turnData.tileInfoArraySize;
+		int mini = maxTourNb;
 		EHexCellDirection direction = W;
 
 		// Loop through each connections
@@ -317,6 +317,9 @@ void MyBotLogic::moveEachNPC(SNPCInfo* npcs, std::list<SOrder>& _orders)
 
 		// Give the order to the npc
 		SOrder order = { EOrderType::Move, idNPC, direction };
+
+		BOT_LOGIC_LOG(mLogger, std::format("dirA*:{}", static_cast<int>(direction)), true);
+
 		_orders.push_back(order);
 	}
 }
