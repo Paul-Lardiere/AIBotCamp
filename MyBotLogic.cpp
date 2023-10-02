@@ -72,24 +72,24 @@ void MyBotLogic::Init(const SInitData& _initData)
 void MyBotLogic::GetTurnOrders(const STurnData& _turnData, std::list<SOrder>& _orders)
 {
 	//BOT_LOGIC_LOG(mLogger, std::format("================================="), true);
-	BOT_LOGIC_LOG(mLogger, std::format("turn : {}", _turnData.turnNb), true);
-	/*BOT_LOGIC_LOG(mLogger, std::format("Objects"), true);
-
+	//BOT_LOGIC_LOG(mLogger, std::format("turn : {}", _turnData.turnNb), true);
 	
+
+	/*BOT_LOGIC_LOG(mLogger, std::format("Objects"), true);
 	for (int i = 0; i < _turnData.objectInfoArraySize; ++i)
 	{
 		BOT_LOGIC_LOG(mLogger, std::format("({},{}), dir:{}", _turnData.objectInfoArray[i].q, _turnData.objectInfoArray[i].r, static_cast<int>(_turnData.objectInfoArray[i].cellPosition)), true);
 	}
 
+	
 	BOT_LOGIC_LOG(mLogger, std::format("tiles"), true);
-
 	for (int i = 0; i < _turnData.tileInfoArraySize; ++i)
 	{
 		BOT_LOGIC_LOG(mLogger, std::format("({},{}), type:{}", _turnData.tileInfoArray[i].q, _turnData.tileInfoArray[i].r, static_cast<int>(_turnData.tileInfoArray[i].type)), true);
 	}
 
+	
 	BOT_LOGIC_LOG(mLogger, std::format("goals"), true);
-
 	for (std::pair<coordinates, int> goal : _graph._goals)
 	{
 		BOT_LOGIC_LOG(mLogger, std::format("({},{}), idGraph:{}", goal.first.first, goal.first.second, _graph.getNode(coordinates{ goal.first.first, goal.first.second })->getIdGraph()), true);

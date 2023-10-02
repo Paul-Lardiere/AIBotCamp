@@ -81,11 +81,8 @@ void Graph::updateGraph(size_t nbTiles, const STileInfo* _tileList, SObjectInfo*
 	for (int i = 0; i != nbNewTiles; ++i)
 	{
 		coordinates coordTile = coordinates{ newTiles[i].q, newTiles[i].r };
-		if (!isInitialized(coordTile)) {
-			Node* newNode = new Node(_initMap[coordTile]);
-			addNode(newNode);
-			createGraph(newNode, _tileList, nbTiles);
-		}
+		Node* newNode = new Node(_initMap[coordTile]);
+		addNodeToGraph(newNode, _tileList, nbTiles);
 	}
 
 	for (auto it = _objectInfoArray.begin(); it != _objectInfoArray.end(); ++it) { // pour chaque objet
@@ -114,7 +111,7 @@ void Graph::updateGraph(size_t nbTiles, const STileInfo* _tileList, SObjectInfo*
 
 void Graph::updateDirection(EHexCellDirection direction, int q, int r, Node* node, const STileInfo* tiles, int nbTiles)
 {
-
+	// si la destination est dans le champ de vision
 	bool statement = std::find_if(tiles + 0, tiles + nbTiles, [r, q](auto&& tile) {
 		return q == tile.q && r == tile.r;
 		}) != tiles+nbTiles;
@@ -146,6 +143,34 @@ void Graph::updateDirection(EHexCellDirection direction, int q, int r, Node* nod
 
 }
 
+void Graph::updateDirectionBis(EHexCellDirection direction, int q, int r, Node* node, const STileInfo* tiles, int nbTiles)
+{
+	// si la destination est dans le champ de vision
+	bool statement = std::find_if(tiles + 0, tiles + nbTiles, [r, q](auto&& tile) {
+		return q == tile.q && r == tile.r;
+		}) != tiles + nbTiles;
+
+	if (exist(coordinates{ q,r }) && !node->inAdjacentList(allDirection[direction])) {
+		Node* destNode;
+
+		if (!isInitialized(coordinates{ q, r })) {
+			destNode = new Node(_initMap[coordinates{ q, r }]);
+			//newNode->initIdGraph(++_idGraphUnaffected );
+			destNode->initIdGraph(node->getIdGraph());
+			addNode(destNode);
+		}
+		else {
+			// Ajout des nodes l'une à l'autre dans leur liste d'adjacence
+			destNode = _nodes[coordinates{ q, r }];
+		}
+
+		node->addToAdjencyList(allDirection[direction], destNode);
+		destNode->addToAdjencyList(allDirectionReversed[direction], node);
+
+	}
+
+}
+
 /// <summary>
 /// ajoute un node au graph
 /// </summary>
@@ -153,7 +178,7 @@ void Graph::updateDirection(EHexCellDirection direction, int q, int r, Node* nod
 void Graph::addNode(Node* node)
 {
 	_size++;
-	_nodes.insert({ coordinates {node->getTileInfo().q, node->getTileInfo().r}, node });
+	_nodes[coordinates {node->getTileInfo().q, node->getTileInfo().r}] = node;
 
 	if (node->getTileInfo().type == EHexCellType::Goal)
 		_goals[{ node->getTileInfo().q, node->getTileInfo().r }] = -1; // initialisation du goal sans lui affecter un npc
@@ -185,6 +210,21 @@ void Graph::updateIdGraph(Node* node, int id)
 		for (auto it = node->getAdjencyList().begin(); it != node->getAdjencyList().end(); ++it)
 			this->updateIdGraph(it->second, id);
 	}
+}
+
+void Graph::addNodeToGraph(Node* node, const STileInfo* tiles, int nbTiles)
+{
+	addNode(node);
+	STileInfo tile = node->getTileInfo();
+
+	coordinates coord = coordinates{ tile.q, tile.r };
+
+	updateDirectionBis(W, (tile.q), (tile.r) - 1, node, tiles, nbTiles);
+	updateDirectionBis(NW, (tile.q) - 1, (tile.r), node, tiles, nbTiles);
+	updateDirectionBis(NE, (tile.q) - 1, (tile.r) + 1, node, tiles, nbTiles);
+	updateDirectionBis(E, (tile.q), (tile.r) + 1, node, tiles, nbTiles);
+	updateDirectionBis(SE, (tile.q) + 1, (tile.r), node, tiles, nbTiles);
+	updateDirectionBis(SW, (tile.q) + 1, (tile.r) - 1, node, tiles, nbTiles);
 }
 
 bool Graph::isInitialized(coordinates coordinates)
