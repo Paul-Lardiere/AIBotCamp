@@ -71,7 +71,7 @@ void Graph::updateGraph(size_t nbTiles, const STileInfo* _tileList, SObjectInfo*
 	int nbNewTiles{};
 
 	std::for_each(_tileList, _tileList + nbTiles, [this, &newTiles, &nbNewTiles](auto&& initTileInfo) { // pour chaque tile qui n'est pas forbidden, l'ajouter ou rcrire dans la liste _initMap
-		if (initTileInfo.type != Forbidden && !exist(coordinates{ initTileInfo.q, initTileInfo.r }))
+		if ((initTileInfo.type != Forbidden && !exist(coordinates{ initTileInfo.q, initTileInfo.r })) || (initTileInfo.type == Goal))
 		{
 			_initMap[coordinates{ initTileInfo.q, initTileInfo.r }] = initTileInfo;
 			newTiles.push_back(initTileInfo);

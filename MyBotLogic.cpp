@@ -98,15 +98,15 @@ void MyBotLogic::GetTurnOrders(const STurnData& _turnData, std::list<SOrder>& _o
 
 	// Update the graph in case we discover new tiles from exploration
 	_graph.updateGraph(_turnData.tileInfoArraySize, _turnData.tileInfoArray, _turnData.objectInfoArray, _turnData.objectInfoArraySize, _turnData.npcInfoArray, nbNPC);
-	BOT_LOGIC_LOG(mLogger, std::format("graph:"), true);
-	BOT_LOGIC_LOG(mLogger, _graph.printGraph(), true);
+	//BOT_LOGIC_LOG(mLogger, std::format("graph:"), true);
+	//BOT_LOGIC_LOG(mLogger, _graph.printGraph(), true);
 
 	int idGraphNPC = _graph.getNode(coordinates{ _turnData.npcInfoArray[0].q, _turnData.npcInfoArray[0].r })->getIdGraph();
 	//BOT_LOGIC_LOG(mLogger, std::format("id graph npc :				{}", idGraphNPC), true);
 
 	if (!_graph.hasEnoughGoals(nbNPC, _turnData.npcInfoArray)) {
-		//BOT_LOGIC_LOG(mLogger, "exploration", true); 
-
+		BOT_LOGIC_LOG(mLogger, "exploration", true); 
+		_goalForEachNpc.clear();
 		exploration(_turnData, _orders); // Search for goals
 	}
 	else
@@ -116,9 +116,10 @@ void MyBotLogic::GetTurnOrders(const STurnData& _turnData, std::list<SOrder>& _o
 		if (!allGoalsAreAssigned()) {
 			assigneGoalsToEachNPC(npcs);
 			calculatePathToEachNPC(npcs);
-
+			BOT_LOGIC_LOG(mLogger, "assign goals", true);
 		}
 
+		BOT_LOGIC_LOG(mLogger, "mouvement", true);
 		moveEachNPC(npcs, _orders);
 	}
 }
