@@ -18,7 +18,7 @@ private:
 	std::map<coordinates, Node*> _nodes;
 	std::map<coordinates, STileInfo> _initMap;
 	std::map<coordinates, STileInfo> _updateMap;
-	std::map<std::pair<coordinates,EHexCellDirection>,SObjectInfo*> _objectInfoArray;
+	std::map<std::pair<coordinates, EHexCellDirection>, SObjectInfo*> _objectInfoArray;
 	int _objectInfoArraySize = -1;
 	int _idGraphUnaffected = 0;
 
@@ -74,12 +74,17 @@ public:
 
 	bool isNodeFinished(coordinates coord) { return _nodes[coord]->finished; }
 	void setFinished(coordinates coord) { _nodes[coord]->finished = true; }
-	
+
 	void addTimesExplored(coordinates coord) { ++_nodes[coord]->timesExplored; }
-	int getTimesExplored(coordinates coord) {return _nodes[coord]->timesExplored;};
-	
+	int getTimesExplored(coordinates coord) { return _nodes[coord]->timesExplored; };
+
 	std::string printGraph();
 
 	bool hasEnoughGoals(int nbNpc, SNPCInfo* npcInfo);
+
+	EHexCellDirection getBestDirectionExploration(coordinates coordNPC);
+
+	float getCoefAttraction(Node* node, int distance);
+	void clearCountedInAttraction();
 };
 

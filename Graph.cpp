@@ -1,6 +1,7 @@
 #include "Graph.h"
 #include <algorithm>
 #include <format>
+#include <math.h>
 
 
 /// <summary>
@@ -10,10 +11,10 @@
 /// <param name="_tileList"></param>
 void Graph::InitGraph(size_t nbTiles, const STileInfo* _tileList, SObjectInfo* objectInfoArray, int objectInfoArraySize, SNPCInfo* npcInfoArray, int npcInfoArraySize)
 {
-	for (auto it = objectInfoArray + 0;it != objectInfoArray + objectInfoArraySize; ++it)
+	for (auto it = objectInfoArray + 0; it != objectInfoArray + objectInfoArraySize; ++it)
 		_objectInfoArray[std::pair<coordinates, EHexCellDirection>{coordinates{ it->q,it->r }, it->cellPosition}] = it;
 	//_objectInfoArraySize = objectInfoArraySize;
-		
+
 	std::for_each(_tileList, _tileList + nbTiles, [this](auto&& initTileInfo) {
 		if (initTileInfo.type != Forbidden)
 			_initMap[coordinates{ initTileInfo.q, initTileInfo.r }] = initTileInfo;
@@ -42,7 +43,7 @@ Graph::~Graph()
 
 
 /// <summary>
-/// fonction recursive de création du graph
+/// fonction recursive de cration du graph
 /// </summary>
 /// <param name="node"></param>
 void Graph::createGraph(Node* node, const STileInfo* tiles, int nbTiles)
@@ -61,15 +62,15 @@ void Graph::createGraph(Node* node, const STileInfo* tiles, int nbTiles)
 
 void Graph::updateGraph(size_t nbTiles, const STileInfo* _tileList, SObjectInfo* objectInfoArray, int objectInfoArraySize, SNPCInfo* npcInfoArray, int npcInfoArraySize)
 {
-	for (auto it = objectInfoArray + 0;it != objectInfoArray + objectInfoArraySize; ++it) // pour chaque objet
-		_objectInfoArray[std::pair<coordinates, EHexCellDirection>{coordinates{ it->q,it->r }, it->cellPosition}] = it; // on l'ajoute à la liste des objets fct(position, direction)
+	for (auto it = objectInfoArray + 0; it != objectInfoArray + objectInfoArraySize; ++it) // pour chaque objet
+		_objectInfoArray[std::pair<coordinates, EHexCellDirection>{coordinates{ it->q,it->r }, it->cellPosition}] = it; // on l'ajoute  la liste des objets fct(position, direction)
 
 	_objectInfoArraySize = objectInfoArraySize;
 
 	std::vector<STileInfo> newTiles{};
 	int nbNewTiles{};
 
-	std::for_each(_tileList, _tileList + nbTiles, [this, &newTiles, &nbNewTiles](auto&& initTileInfo) { // pour chaque tile qui n'est pas forbidden, l'ajouter ou réécrire dans la liste _initMap
+	std::for_each(_tileList, _tileList + nbTiles, [this, &newTiles, &nbNewTiles](auto&& initTileInfo) { // pour chaque tile qui n'est pas forbidden, l'ajouter ou rcrire dans la liste _initMap
 		if (initTileInfo.type != Forbidden && !exist(coordinates{ initTileInfo.q, initTileInfo.r }))
 		{
 			_initMap[coordinates{ initTileInfo.q, initTileInfo.r }] = initTileInfo;
@@ -78,26 +79,24 @@ void Graph::updateGraph(size_t nbTiles, const STileInfo* _tileList, SObjectInfo*
 		}
 		});
 
-	for (int i = 0; i != nbTiles; ++i)
+	for (int i = 0; i != nbNewTiles; ++i)
 	{
-		if (_tileList[i].type != Forbidden) {
-			coordinates coordTile = coordinates{ _tileList[i].q, _tileList[i].r };
-			Node* newNode = new Node(_initMap[coordTile]);
-			addNodeToGraph(newNode, _tileList, nbTiles);
-		}
+		coordinates coordTile = coordinates{ newTiles[i].q, newTiles[i].r };
+		Node* newNode = new Node(_initMap[coordTile]);
+		addNodeToGraph(newNode, _tileList, nbTiles);
 	}
 
 	for (auto it = _objectInfoArray.begin(); it != _objectInfoArray.end(); ++it) { // pour chaque objet
-		coordinates coordObj = coordinates{ it->second->q, it->second->r }; // récuperer ses coordonnees
+		coordinates coordObj = coordinates{ it->second->q, it->second->r }; // rcuperer ses coordonnees
 
-		if (isInitialized(coordObj) 
-			&& (getNodes()[coordObj]->getAdjencyList().find(it->second->cellPosition) != getNodes()[coordObj]->getAdjencyList().end()) 
+		if (isInitialized(coordObj)
+			&& (getNodes()[coordObj]->getAdjencyList().find(it->second->cellPosition) != getNodes()[coordObj]->getAdjencyList().end())
 			&& isInitialized(getNodes()[coordObj]->getNodeDirection(it->second->cellPosition)->getNodeCoordinates())
-			) 
+			)
 		{
 			getNodes()[coordObj]->getNodeDirection(it->second->cellPosition)->getAdjencyList().erase(static_cast<EHexCellDirection>((it->second->cellPosition + 3) % 6)); // on supprime de la liste d'adjacence la node current si on trouve un mur entre les deux
 			getNodes()[coordObj]->getAdjencyList().erase(it->second->cellPosition); // on supprime la direction des nodes d'adjacence des la node current
-			getNode(coordObj)->initIdGraph(++_idGraphUnaffected); // on réinitialise le graph à partir de la node de direction avec un id plus grand // ici vient le probleme du graph avec un id de 70
+			getNode(coordObj)->initIdGraph(++_idGraphUnaffected); // on rinitialise le graph  partir de la node de direction avec un id plus grand // ici vient le probleme du graph avec un id de 70
 		}
 	}
 
@@ -107,18 +106,13 @@ void Graph::updateGraph(size_t nbTiles, const STileInfo* _tileList, SObjectInfo*
 		updateIdGraph(_nodes[coordNPC], _nodes[coordNPC]->getIdGraph()); // on update l'id du graph
 	}
 
-	for (auto it = _nodes.begin(); it != _nodes.end(); ++it) 
-		it->second->updated = false; // on dit que toutes les nodes ont été traité.
+	for (auto it = _nodes.begin(); it != _nodes.end(); ++it)
+		it->second->updated = false; // on dit que toutes les nodes ont t trait.
 }
 
 void Graph::updateDirection(EHexCellDirection direction, int q, int r, Node* node, const STileInfo* tiles, int nbTiles)
 {
-	// si la destination est dans le champ de vision
-	bool statement = std::find_if(tiles + 0, tiles + nbTiles, [r, q](auto&& tile) {
-		return q == tile.q && r == tile.r;
-		}) != tiles+nbTiles;
-
-	if (exist(coordinates{ q,r }) && !node->inAdjacentList(allDirection[direction]) && statement) {
+	if (exist(coordinates{ q,r }) && !node->inAdjacentList(allDirection[direction])) {
 
 		if (!isInitialized(coordinates{ q, r })) {
 			Node* newNode = new Node(_initMap[coordinates{ q, r }]);
@@ -134,7 +128,7 @@ void Graph::updateDirection(EHexCellDirection direction, int q, int r, Node* nod
 			createGraph(newNode, tiles, nbTiles);
 		}
 		else {
-			// Ajout des nodes l'une à l'autre dans leur liste d'adjacence
+			// Ajout des nodes l'une  l'autre dans leur liste d'adjacence
 			Node* destNode = _nodes[coordinates{ q, r }];
 
 			node->addToAdjencyList(allDirection[direction], destNode);
@@ -147,10 +141,6 @@ void Graph::updateDirection(EHexCellDirection direction, int q, int r, Node* nod
 
 void Graph::updateDirectionBis(EHexCellDirection direction, int q, int r, Node* node, const STileInfo* tiles, int nbTiles)
 {
-	// si la destination est dans le champ de vision
-	bool statement = std::find_if(tiles + 0, tiles + nbTiles, [r, q](auto&& tile) {
-		return q == tile.q && r == tile.r;
-		}) != tiles + nbTiles;
 
 	if (exist(coordinates{ q,r }) && !node->inAdjacentList(allDirection[direction])) {
 		Node* destNode;
@@ -162,7 +152,7 @@ void Graph::updateDirectionBis(EHexCellDirection direction, int q, int r, Node* 
 			addNode(destNode);
 		}
 		else {
-			// Ajout des nodes l'une à l'autre dans leur liste d'adjacence
+			// Ajout des nodes l'une  l'autre dans leur liste d'adjacence
 			destNode = _nodes[coordinates{ q, r }];
 		}
 
@@ -180,7 +170,7 @@ void Graph::updateDirectionBis(EHexCellDirection direction, int q, int r, Node* 
 void Graph::addNode(Node* node)
 {
 	_size++;
-	_nodes[coordinates {node->getTileInfo().q, node->getTileInfo().r}] = node;
+	_nodes[coordinates{ node->getTileInfo().q, node->getTileInfo().r }] = node;
 
 	if (node->getTileInfo().type == EHexCellType::Goal)
 		_goals[{ node->getTileInfo().q, node->getTileInfo().r }] = -1; // initialisation du goal sans lui affecter un npc
@@ -206,7 +196,7 @@ bool Graph::isNotWalled(coordinates coordinateNode1, coordinates coordinateNode2
 
 void Graph::updateIdGraph(Node* node, int id)
 {
-	if (!node->updated) {
+	if (node->updated == false) {
 		node->updated = true;
 		node->initIdGraph(id);
 		for (auto it = node->getAdjencyList().begin(); it != node->getAdjencyList().end(); ++it)
@@ -216,15 +206,11 @@ void Graph::updateIdGraph(Node* node, int id)
 
 void Graph::addNodeToGraph(Node* node, const STileInfo* tiles, int nbTiles)
 {
-	// TODO si node est deja enregistree, prendre son id
-
-	// sinon l'ajouter et lui donner id+1
 	addNode(node);
 	STileInfo tile = node->getTileInfo();
 
 	coordinates coord = coordinates{ tile.q, tile.r };
 
-	// proparger id to proche voisins
 	updateDirectionBis(W, (tile.q), (tile.r) - 1, node, tiles, nbTiles);
 	updateDirectionBis(NW, (tile.q) - 1, (tile.r), node, tiles, nbTiles);
 	updateDirectionBis(NE, (tile.q) - 1, (tile.r) + 1, node, tiles, nbTiles);
@@ -309,5 +295,72 @@ bool Graph::hasEnoughGoals(int nbNpc, SNPCInfo* npcInfo)
 	}
 
 	return true;
+}
+
+EHexCellDirection Graph::getBestDirectionExploration(coordinates coordNPC)
+{
+	Node* npcNode = getNode(coordNPC);
+
+	float maxattraction = -10000000;
+	Node::adjencyList adjList = npcNode->getAdjencyList();
+
+	EHexCellDirection bestDirection = W;
+
+
+	for (std::pair<EHexCellDirection, Node*> currentAdjencyNode : adjList)
+	{
+		EHexCellDirection dir = currentAdjencyNode.first;
+		Node* nodeAdjacent = currentAdjencyNode.second;
+
+		npcNode->setCountedInAttraction(true);
+
+		float attraction = getCoefAttraction(nodeAdjacent, 1);
+		if (attraction < maxattraction)
+			continue;
+
+		maxattraction = attraction;
+		bestDirection = dir;
+
+		clearCountedInAttraction();
+	}
+
+
+	return bestDirection;
+}
+
+float Graph::getCoefAttraction(Node* node, int distance)
+{
+	float coefAttraction = 1.0f - node->timesExplored;
+
+	std::vector<Node*> nodeToAddInAttraction{};
+
+	for (std::pair<EHexCellDirection, Node*> currentAdjencyNode : node->getAdjencyList())
+	{
+		EHexCellDirection dir = currentAdjencyNode.first;
+		Node* nodeAdjacent = currentAdjencyNode.second;
+		if (nodeAdjacent->isCountedInAttraction())
+			continue;
+
+		if (nodeAdjacent->timesExplored == 0)
+			coefAttraction += 1.0f;
+
+		nodeAdjacent->setCountedInAttraction(true);
+		nodeToAddInAttraction.push_back(nodeAdjacent);
+	}
+
+	coefAttraction = coefAttraction / distance;
+
+	std::for_each(nodeToAddInAttraction.begin(), nodeToAddInAttraction.end(), [&coefAttraction, distance, this](Node* node) {
+		coefAttraction += getCoefAttraction(node, distance + 1);
+		});
+
+	return coefAttraction;
+}
+
+void Graph::clearCountedInAttraction()
+{
+	for (std::pair<coordinates, Node*> currentNode : _nodes) {
+		currentNode.second->setCountedInAttraction(false);
+	}
 }
 
