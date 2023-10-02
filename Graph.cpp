@@ -79,11 +79,13 @@ void Graph::updateGraph(size_t nbTiles, const STileInfo* _tileList, SObjectInfo*
 		}
 		});
 
-	for (int i = 0; i != nbNewTiles; ++i)
+	for (int i = 0; i != nbTiles; ++i)
 	{
-		coordinates coordTile = coordinates{ newTiles[i].q, newTiles[i].r };
-		Node* newNode = new Node(_initMap[coordTile]);
-		addNodeToGraph(newNode, _tileList, nbTiles);
+		if (_tileList[i].type != Forbidden) {
+			coordinates coordTile = coordinates{ _tileList[i].q, _tileList[i].r };
+			Node* newNode = new Node(_initMap[coordTile]);
+			addNodeToGraph(newNode, _tileList, nbTiles);
+		}
 	}
 
 	for (auto it = _objectInfoArray.begin(); it != _objectInfoArray.end(); ++it) { // pour chaque objet
@@ -196,7 +198,7 @@ bool Graph::isNotWalled(coordinates coordinateNode1, coordinates coordinateNode2
 
 void Graph::updateIdGraph(Node* node, int id)
 {
-	if (node->updated == false) {
+	if (!node->updated) {
 		node->updated = true;
 		node->initIdGraph(id);
 		for (auto it = node->getAdjencyList().begin(); it != node->getAdjencyList().end(); ++it)
@@ -206,11 +208,15 @@ void Graph::updateIdGraph(Node* node, int id)
 
 void Graph::addNodeToGraph(Node* node, const STileInfo* tiles, int nbTiles)
 {
+	// TODO si node est deja enregistree, prendre son id
+
+	// sinon l'ajouter et lui donner id+1
 	addNode(node);
 	STileInfo tile = node->getTileInfo();
 
 	coordinates coord = coordinates{ tile.q, tile.r };
 
+	// proparger id to proche voisins
 	updateDirectionBis(W, (tile.q), (tile.r) - 1, node, tiles, nbTiles);
 	updateDirectionBis(NW, (tile.q) - 1, (tile.r), node, tiles, nbTiles);
 	updateDirectionBis(NE, (tile.q) - 1, (tile.r) + 1, node, tiles, nbTiles);

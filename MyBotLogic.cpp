@@ -105,7 +105,7 @@ void MyBotLogic::GetTurnOrders(const STurnData& _turnData, std::list<SOrder>& _o
 	//BOT_LOGIC_LOG(mLogger, std::format("id graph npc :				{}", idGraphNPC), true);
 
 	if (!_graph.hasEnoughGoals(nbNPC, _turnData.npcInfoArray)) {
-		//BOT_LOGIC_LOG(mLogger, "exploration", true); 
+		BOT_LOGIC_LOG(mLogger, "exploration", true); 
 		
 		exploration(_turnData,_orders); // Search for goals
 	}
