@@ -1,6 +1,7 @@
 #include "Graph.h"
 #include <algorithm>
 #include <format>
+#include <MyBotLogic.h>
 
 
 /// <summary>
@@ -83,6 +84,12 @@ void Graph::updateGraph(size_t nbTiles, const STileInfo* _tileList, SObjectInfo*
 		coordinates coordTile = coordinates{ newTiles[i].q, newTiles[i].r };
 		Node* newNode = new Node(_initMap[coordTile]);
 		addNodeToGraph(newNode, _tileList, nbTiles);
+		int espeMin = nbTiles;
+		for (int i = 0; i != npcInfoArraySize; ++i) {
+			espeMin = std::min(espeMin, distanceHex(coordinates{ npcInfoArray[i].q,npcInfoArray[i].q }, newNode->getNodeCoordinates()));
+		}
+		newNode->esperance = espeMin;
+		
 	}
 
 	for (auto it = _objectInfoArray.begin(); it != _objectInfoArray.end(); ++it) { // pour chaque objet
@@ -96,6 +103,7 @@ void Graph::updateGraph(size_t nbTiles, const STileInfo* _tileList, SObjectInfo*
 			getNodes()[coordObj]->getNodeDirection(it->second->cellPosition)->getAdjencyList().erase(static_cast<EHexCellDirection>((it->second->cellPosition + 3) % 6)); // on supprime de la liste d'adjacence la node current si on trouve un mur entre les deux
 			getNodes()[coordObj]->getAdjencyList().erase(it->second->cellPosition); // on supprime la direction des nodes d'adjacence des la node current
 			getNode(coordObj)->initIdGraph(++_idGraphUnaffected); // on réinitialise le graph à partir de la node de direction avec un id plus grand // ici vient le probleme du graph avec un id de 70
+			getNode(coordObj)->setEsperance(getNode(coordObj)->getEsperance()-1);
 		}
 	}
 
@@ -174,6 +182,7 @@ void Graph::addNode(Node* node)
 
 	if (node->getTileInfo().type == EHexCellType::Goal)
 		_goals[{ node->getTileInfo().q, node->getTileInfo().r }] = -1; // initialisation du goal sans lui affecter un npc
+	node->setEsperance(6-node->getAdjencyList().size());
 }
 
 /// <summary>
@@ -255,6 +264,15 @@ int Graph::distanceHexCoordNpc(coordinates coordinates, SNPCInfo npcInfo)
 {
 	int qdiff = coordinates.first - npcInfo.q;
 	int rdiff = coordinates.second - npcInfo.r;
+	int sdiff = -(qdiff + rdiff);
+
+	return (abs(qdiff) + abs(rdiff) + abs(sdiff)) / 2;
+}
+
+int Graph::distanceHex(Graph::coordinates coordinates, Graph::coordinates coord2)
+{
+	int qdiff = coordinates.first - coord2.first;
+	int rdiff = coordinates.second - coord2.second;
 	int sdiff = -(qdiff + rdiff);
 
 	return (abs(qdiff) + abs(rdiff) + abs(sdiff)) / 2;

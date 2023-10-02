@@ -248,15 +248,15 @@ void MyBotLogic::exploration(const STurnData& turnData, std::list<SOrder>& _orde
 		Node *node = _graph.getNode(coordNPC);
 		Node::adjencyList adjacentNodes = node->getAdjencyList();
 
-		int mini = maxTourNb;
-		EHexCellDirection direction = W;
+		int max = 0;
+		EHexCellDirection direction = NE;
 
 		// Loop through each connections
 		for (std::pair<EHexCellDirection, Node*> currentAdjencyNode : adjacentNodes)
 		{
-			if (currentAdjencyNode.second->timesExplored < mini && !currentAdjencyNode.second->isOccupied())
+			if (currentAdjencyNode.second->esperance > max && !currentAdjencyNode.second->isOccupied())
 			{
-				mini = currentAdjencyNode.second->timesExplored;
+				max = currentAdjencyNode.second->esperance;
 				direction = currentAdjencyNode.first;
 			}
 		}
@@ -266,7 +266,7 @@ void MyBotLogic::exploration(const STurnData& turnData, std::list<SOrder>& _orde
 		BOT_LOGIC_LOG(mLogger, std::format("dir:{}", static_cast<int>(direction)), true);
 
 		coordinates coordDest = getCoordinatesDirection(coordNPC, direction);
-
+		node->esperance --;
 		_graph.addTimesExplored(coordDest);
 		_graph.setOccupiedNode(coordNPC, false);
 		_graph.setOccupiedNode(coordDest, true);
@@ -281,6 +281,8 @@ void MyBotLogic::assigneGoalsToEachNPC(SNPCInfo* npcs)
 	for (int i = 0; i < nbNPC; i++)
 		_goalForEachNpc[npcs[i].uid] = _graph.GetClosestGoalInfo(npcs[i]);
 }
+
+
 
 void MyBotLogic::calculatePathToEachNPC(SNPCInfo* npcs)
 {

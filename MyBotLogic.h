@@ -38,6 +38,7 @@ private:
 	void exploration(const STurnData& _turndata, std::list<SOrder>& _orders);
 	coordinates getCoordinatesDirection(coordinates coordinate, EHexCellDirection direction);
 	void assigneGoalsToEachNPC(SNPCInfo* npcs);
+	void assigneGoalsToEachNPCExplo(SNPCInfo* npcs);
 	void calculatePathToEachNPC(SNPCInfo* npcs);
 	void moveEachNPC(SNPCInfo* npcs, std::list<SOrder>& _orders);
 	void calculateAndInitializePath(int idNPC, SNPCInfo npc);

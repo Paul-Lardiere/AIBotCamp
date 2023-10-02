@@ -24,6 +24,7 @@ public:
 	Node(STileInfo tile) : _tile(tile) {};
 	bool finished = false;
 	int timesExplored = 0;
+	int esperance = 0;
 	bool updated = false;
 
 	void addToAdjencyList(EHexCellDirection direction, Node* node);
@@ -37,6 +38,9 @@ public:
 	int getIdGraph() { return _idGraph; };
 	void setIdGraph(int idGrpah) { _idGraph = std::min(idGrpah, _idGraph); };
 	void initIdGraph(int  idGraph) { _idGraph = idGraph; };
+
+	int getEsperance() { return esperance; };
+	void setEsperance(int esp) { esperance = esp; };
 
 	void setCost_so_far(coordinates coordinate, int cost_so_far) { _cost_so_far[coordinate] = cost_so_far; };
 	int getCost_so_far(coordinates coordinate) { 
