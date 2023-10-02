@@ -27,12 +27,12 @@ private:
 
 	Graph() = default;
 
-	void createGraph(Node* node);
+	void createGraph(Node* node, const STileInfo* tiles, int nbTiles);
 
 	bool exist(coordinates coordinates);
 	bool isInitialized(coordinates coordinates);
 	void addNode(Node* node);
-	void updateDirection(EHexCellDirection direction, int q, int r, Node* node);
+	void updateDirection(EHexCellDirection direction, int q, int r, Node* node, const STileInfo* tiles, int nbTiles);
 	bool isNotWalled(coordinates coordinateNode1, coordinates coordinateNode2, EHexCellDirection direction);
 	void updateIdGraph(Node* node, int id);
 
