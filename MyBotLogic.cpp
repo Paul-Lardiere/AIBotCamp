@@ -73,7 +73,7 @@ void MyBotLogic::GetTurnOrders(const STurnData& _turnData, std::list<SOrder>& _o
 {
 	//BOT_LOGIC_LOG(mLogger, std::format("================================="), true);
 	BOT_LOGIC_LOG(mLogger, std::format("turn : {}", _turnData.turnNb), true);
-	BOT_LOGIC_LOG(mLogger, std::format("npc_position ({},{})", _turnData.npcInfoArray[0].q, _turnData.npcInfoArray[0].r), true);
+	//BOT_LOGIC_LOG(mLogger, std::format("npc_position ({},{})", _turnData.npcInfoArray[0].q, _turnData.npcInfoArray[0].r), true);
 
 	/*BOT_LOGIC_LOG(mLogger, std::format("Objects"), true);
 	for (int i = 0; i < _turnData.objectInfoArraySize; ++i)
@@ -98,8 +98,8 @@ void MyBotLogic::GetTurnOrders(const STurnData& _turnData, std::list<SOrder>& _o
 
 	// Update the graph in case we discover new tiles from exploration
 	_graph.updateGraph(_turnData.tileInfoArraySize, _turnData.tileInfoArray, _turnData.objectInfoArray, _turnData.objectInfoArraySize, _turnData.npcInfoArray, nbNPC);
-	//BOT_LOGIC_LOG(mLogger, std::format("graph:"), true);
-	//BOT_LOGIC_LOG(mLogger, _graph.printGraph(), true);
+	BOT_LOGIC_LOG(mLogger, std::format("graph:"), true);
+	BOT_LOGIC_LOG(mLogger, _graph.printGraph(), true);
 
 	int idGraphNPC = _graph.getNode(coordinates{ _turnData.npcInfoArray[0].q, _turnData.npcInfoArray[0].r })->getIdGraph();
 	//BOT_LOGIC_LOG(mLogger, std::format("id graph npc :				{}", idGraphNPC), true);
@@ -244,30 +244,35 @@ Node* MyBotLogic::FindClosestNode(std::vector<Node*> nodes, Graph::coordinates g
 void MyBotLogic::exploration(const STurnData& turnData, std::list<SOrder>& _orders)
 {
 	for (int i = 0; i < turnData.npcInfoArraySize; ++i) {
+
 		coordinates coordNPC{ turnData.npcInfoArray[i].q, turnData.npcInfoArray[i].r };
-		Node *node = _graph.getNode(coordNPC);
-		Node::adjencyList adjacentNodes = node->getAdjencyList();
 
-		int mini = maxTourNb;
-		EHexCellDirection direction = W;
+		EHexCellDirection dir = _graph.getBestDirectionExploration(coordNPC);
 
-		// Loop through each connections
-		for (std::pair<EHexCellDirection, Node*> currentAdjencyNode : adjacentNodes)
-		{
-			if (currentAdjencyNode.second->timesExplored < mini && !currentAdjencyNode.second->isOccupied())
-			{
-				mini = currentAdjencyNode.second->timesExplored;
-				direction = currentAdjencyNode.first;
-			}
-		}
+		//Node *node = _graph.getNode(coordNPC);
+		//Node::adjencyList adjacentNodes = node->getAdjencyList();
 
-		SOrder order = { EOrderType::Move, turnData.npcInfoArray[i].uid, direction};
+		//int mini = maxTourNb;
+		//EHexCellDirection direction = W;
 
-		BOT_LOGIC_LOG(mLogger, std::format("dir:{}", static_cast<int>(direction)), true);
+		//// Loop through each connections
+		//for (std::pair<EHexCellDirection, Node*> currentAdjencyNode : adjacentNodes)
+		//{
+		//	if (currentAdjencyNode.second->timesExplored < mini && !currentAdjencyNode.second->isOccupied())
+		//	{
+		//		mini = currentAdjencyNode.second->timesExplored;
+		//		direction = currentAdjencyNode.first;
+		//	}
+		//}
 
-		coordinates coordDest = getCoordinatesDirection(coordNPC, direction);
+		SOrder order = { EOrderType::Move, turnData.npcInfoArray[i].uid, dir };
+
+		//BOT_LOGIC_LOG(mLogger, std::format("dir:{}", static_cast<int>(dir)), true);
+
+		coordinates coordDest = getCoordinatesDirection(coordNPC, dir);
 
 		_graph.addTimesExplored(coordDest);
+		BOT_LOGIC_LOG(mLogger, std::format("node:({},{}) : TV {}", coordDest.first, coordDest.second, _graph.getTimesExplored(coordDest)), true);
 		_graph.setOccupiedNode(coordNPC, false);
 		_graph.setOccupiedNode(coordDest, true);
 
@@ -318,7 +323,7 @@ void MyBotLogic::moveEachNPC(SNPCInfo* npcs, std::list<SOrder>& _orders)
 		// Give the order to the npc
 		SOrder order = { EOrderType::Move, idNPC, direction };
 
-		BOT_LOGIC_LOG(mLogger, std::format("dirA*:{}", static_cast<int>(direction)), true);
+		//BOT_LOGIC_LOG(mLogger, std::format("dirA*:{}", static_cast<int>(direction)), true);
 
 		_orders.push_back(order);
 	}

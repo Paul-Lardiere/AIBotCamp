@@ -18,6 +18,7 @@ private:
 	std::map<coordinates, int> _heuristic;
 	int _idGraph{};
 	bool _occupied = false;
+	bool countedInAttraction = false;
 
 public:
 	Node() = default;
@@ -57,6 +58,9 @@ public:
 			return _heuristic.at(coordinate) + _cost_so_far.at(coordinate); 
 		return -1;
 	}
+
+	bool isCountedInAttraction() { return countedInAttraction; }
+	void setCountedInAttraction(bool counted) { countedInAttraction = counted; }
 
 	void setOccupied(bool isOccupied) { _occupied = isOccupied; }
 	bool isOccupied() { return _occupied; }

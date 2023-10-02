@@ -81,5 +81,10 @@ public:
 	std::string printGraph();
 
 	bool hasEnoughGoals(int nbNpc, SNPCInfo* npcInfo);
+
+	EHexCellDirection getBestDirectionExploration(coordinates coordNPC);
+
+	float getCoefAttraction(Node* node, int distance);
+	void clearCountedInAttraction();
 };
 
