@@ -1,7 +1,6 @@
 #include "Graph.h"
 #include <algorithm>
 #include <format>
-#include <math.h>
 
 
 /// <summary>
@@ -143,8 +142,9 @@ void Graph::updateDirection(EHexCellDirection direction, int q, int r, Node* nod
 
 void Graph::updateDirectionBis(EHexCellDirection direction, int q, int r, Node* node, const STileInfo* tiles, int nbTiles)
 {
+	bool isGoal = exist(coordinates{ q,r }) && (_initMap[coordinates{ q,r }].type == EHexCellType::Goal);
 
-	if (exist(coordinates{ q,r }) && !node->inAdjacentList(allDirection[direction])) {
+	if (exist(coordinates{ q,r }) && !node->inAdjacentList(allDirection[direction]) && !isGoal) {
 		Node* destNode;
 
 		if (!isInitialized(coordinates{ q, r })) {
@@ -301,72 +301,5 @@ bool Graph::hasEnoughGoals(int nbNpc, SNPCInfo* npcInfo)
 	}
 
 	return true;
-}
-
-EHexCellDirection Graph::getBestDirectionExploration(coordinates coordNPC)
-{
-	Node* npcNode = getNode(coordNPC);
-
-	float maxattraction = -10000000;
-	Node::adjencyList adjList = npcNode->getAdjencyList();
-
-	EHexCellDirection bestDirection = W;
-
-
-	for (std::pair<EHexCellDirection, Node*> currentAdjencyNode : adjList)
-	{
-		EHexCellDirection dir = currentAdjencyNode.first;
-		Node* nodeAdjacent = currentAdjencyNode.second;
-
-		npcNode->setCountedInAttraction(true);
-
-		float attraction = getCoefAttraction(nodeAdjacent, 1);
-		if (attraction < maxattraction)
-			continue;
-
-		maxattraction = attraction;
-		bestDirection = dir;
-
-		clearCountedInAttraction();
-	}
-
-
-	return bestDirection;
-}
-
-float Graph::getCoefAttraction(Node* node, int distance)
-{
-	float coefAttraction = 1.0f - node->timesExplored;
-
-	std::vector<Node*> nodeToAddInAttraction{};
-
-	for (std::pair<EHexCellDirection, Node*> currentAdjencyNode : node->getAdjencyList())
-	{
-		EHexCellDirection dir = currentAdjencyNode.first;
-		Node* nodeAdjacent = currentAdjencyNode.second;
-		if (nodeAdjacent->isCountedInAttraction())
-			continue;
-
-		if (nodeAdjacent->timesExplored == 0)
-			coefAttraction += 1.0f;
-
-		nodeAdjacent->setCountedInAttraction(true);
-		nodeToAddInAttraction.push_back(nodeAdjacent);
-	}
-	
-	coefAttraction = coefAttraction / distance;
-
-	std::for_each(nodeToAddInAttraction.begin(), nodeToAddInAttraction.end(), [&coefAttraction, distance, this](Node* node) {
-		coefAttraction += getCoefAttraction(node, distance + 1);
-		});
-
-	return coefAttraction;
-}	
-
-void Graph::clearCountedInAttraction()
-{
-	for (std::pair<coordinates, Node*> currentNode : _nodes) {
-		currentNode.second->setCountedInAttraction(false);
-	}
 }
 
