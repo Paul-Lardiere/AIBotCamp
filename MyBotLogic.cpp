@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <format>
 
+#ifdef _DEBUG
 #define LOG(x) BOT_LOGIC_LOG(mLogger, x, true)
 #define LOGLOG(x) { std::stringstream ss; ss << x; LOG(ss.str().c_str()); }
 #define ASSERT(x) ASSERT_RET(x, )
@@ -20,7 +21,6 @@
 Logger mLogger;
 #endif
 
-#ifdef _DEBUG
 template<class A, class B>
 std::basic_ostream<A, B>& operator<<(std::basic_ostream<A, B>& s, const std::pair<int, int>& p)
 {
@@ -52,7 +52,7 @@ void MyBotLogic::Configure(const SConfigData& _configData)
 	mLogger.Init(_configData.logpath, "MyBotLogic.log");
 #endif
 
-	BOT_LOGIC_LOG(mLogger, "Configure", true);
+	//BOT_LOGIC_LOG(mLogger, "Configure", true);
 
 	//Write Code Here
 }
@@ -72,7 +72,7 @@ void MyBotLogic::Init(const SInitData& _initData)
 void MyBotLogic::GetTurnOrders(const STurnData& _turnData, std::list<SOrder>& _orders)
 {
 	//BOT_LOGIC_LOG(mLogger, std::format("================================="), true);
-	BOT_LOGIC_LOG(mLogger, std::format("turn : {}", _turnData.turnNb), true);
+	//BOT_LOGIC_LOG(mLogger, std::format("turn : {}", _turnData.turnNb), true);
 	//BOT_LOGIC_LOG(mLogger, std::format("npc_position ({},{})", _turnData.npcInfoArray[0].q, _turnData.npcInfoArray[0].r), true);
 
 	/*BOT_LOGIC_LOG(mLogger, std::format("Objects"), true);
@@ -105,7 +105,7 @@ void MyBotLogic::GetTurnOrders(const STurnData& _turnData, std::list<SOrder>& _o
 	//BOT_LOGIC_LOG(mLogger, std::format("id graph npc :				{}", idGraphNPC), true);
 
 	if (!_graph.hasEnoughGoals(nbNPC, _turnData.npcInfoArray)) {
-		BOT_LOGIC_LOG(mLogger, "exploration", true); 
+		//BOT_LOGIC_LOG(mLogger, "exploration", true); 
 		_goalForEachNpc.clear();
 		exploration(_turnData, _orders); // Search for goals
 	}
@@ -116,10 +116,10 @@ void MyBotLogic::GetTurnOrders(const STurnData& _turnData, std::list<SOrder>& _o
 		if (!allGoalsAreAssigned()) {
 			assigneGoalsToEachNPC(npcs);
 			calculatePathToEachNPC(npcs);
-			BOT_LOGIC_LOG(mLogger, "assign goals", true);
+			//BOT_LOGIC_LOG(mLogger, "assign goals", true);
 		}
 
-		BOT_LOGIC_LOG(mLogger, "mouvement", true);
+		//BOT_LOGIC_LOG(mLogger, "mouvement", true);
 		moveEachNPC(npcs, _orders);
 	}
 }
@@ -273,7 +273,7 @@ void MyBotLogic::exploration(const STurnData& turnData, std::list<SOrder>& _orde
 		coordinates coordDest = getCoordinatesDirection(coordNPC, dir);
 
 		_graph.addTimesExplored(coordDest);
-		BOT_LOGIC_LOG(mLogger, std::format("node:({},{}) : TV {}", coordDest.first, coordDest.second, _graph.getTimesExplored(coordDest)), true);
+		//BOT_LOGIC_LOG(mLogger, std::format("node:({},{}) : TV {}", coordDest.first, coordDest.second, _graph.getTimesExplored(coordDest)), true);
 		_graph.setOccupiedNode(coordNPC, false);
 		_graph.setOccupiedNode(coordDest, true);
 
