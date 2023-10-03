@@ -13,17 +13,19 @@ private:
 	STileInfo _tile;
 	adjencyList _adjencyList;
 
-	// cost so far du noeud pour arriver au goal qui se trouve au coordoonées en clé
+	// cost so far du noeud pour arriver au goal qui se trouve au coordoones en cl
 	std::map<coordinates, int> _cost_so_far;
 	std::map<coordinates, int> _heuristic;
-	int* _idGraph{};
+	int _idGraph{};
 	bool _occupied = false;
+	bool countedInAttraction = false;
 
 public:
 	Node() = default;
 	Node(STileInfo tile) : _tile(tile) {};
 	bool finished = false;
 	int timesExplored = 0;
+	bool updated = false;
 
 	void addToAdjencyList(EHexCellDirection direction, Node* node);
 	bool inAdjacentList(EHexCellDirection direction);
@@ -33,14 +35,14 @@ public:
 	STileInfo getTileInfo() { return _tile; };
 	coordinates getNodeCoordinates() { return coordinates{ _tile.q, _tile.r }; }
 
-	int* getIdGraph() { return _idGraph; };
-	void setIdGraph(int idGrpah) { *_idGraph = std::min(idGrpah, *_idGraph); };
-	void initIdGraph(int * idGraph) { _idGraph = idGraph; };
+	int getIdGraph() { return _idGraph; };
+	void setIdGraph(int idGrpah) { _idGraph = std::min(idGrpah, _idGraph); };
+	void initIdGraph(int  idGraph) { _idGraph = idGraph; };
 
 	void setCost_so_far(coordinates coordinate, int cost_so_far) { _cost_so_far[coordinate] = cost_so_far; };
-	int getCost_so_far(coordinates coordinate) { 
+	int getCost_so_far(coordinates coordinate) {
 		if (_cost_so_far.contains(coordinate))
-			return _cost_so_far.at(coordinate); 
+			return _cost_so_far.at(coordinate);
 		return -1;
 	};
 
@@ -51,11 +53,14 @@ public:
 		return -1;
 	}
 
-	int getTotalEstimatedCost(coordinates coordinate) { 
+	int getTotalEstimatedCost(coordinates coordinate) {
 		if (_heuristic.contains(coordinate) && _cost_so_far.contains(coordinate))
-			return _heuristic.at(coordinate) + _cost_so_far.at(coordinate); 
+			return _heuristic.at(coordinate) + _cost_so_far.at(coordinate);
 		return -1;
 	}
+
+	bool isCountedInAttraction() { return countedInAttraction; }
+	void setCountedInAttraction(bool counted) { countedInAttraction = counted; }
 
 	void setOccupied(bool isOccupied) { _occupied = isOccupied; }
 	bool isOccupied() { return _occupied; }

@@ -11,7 +11,7 @@ rem set AIBOT_PATH=D:\AIBootcamp2\LesOutardes\build-solution-x64\Debug\lesoutard
 rem set TEAM=LesOutardes
 
 set AIBOOTCAMP2_ENGINE_DIR="C:\Users\gira2014\Documents\IA\IABC\AIBootCamp2"
-set AIBOT_PATH="C:\Users\gira2014\Documents\IA\IABC\aibotcamp\build-solution-x64\Debug\myfirstaibot.dll"
+set AIBOT_PATH="C:\Users\gira2014\Documents\IA\IABC\iabootcamp\build-solution-x64\Debug\myfirstaibot.dll"
 set TEAM=ElTonioBot
 
 rem in s, -1 = default

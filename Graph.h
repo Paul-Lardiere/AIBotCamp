@@ -6,6 +6,7 @@
 #include <vector>
 
 
+
 using distance_type = int;
 
 class Graph
@@ -17,23 +18,29 @@ private:
 	std::map<coordinates, Node*> _nodes;
 	std::map<coordinates, STileInfo> _initMap;
 	std::map<coordinates, STileInfo> _updateMap;
-	SObjectInfo* _objectInfoArray{};
+	std::map<std::pair<coordinates, EHexCellDirection>, SObjectInfo*> _objectInfoArray;
 	int _objectInfoArraySize = -1;
+	int _idGraphUnaffected = 0;
+
+
 
 
 	Graph() = default;
 
-	void createGraph(Node* node);
+	void createGraph(Node* node, const STileInfo* tiles, int nbTiles);
 
 	bool exist(coordinates coordinates);
 	bool isInitialized(coordinates coordinates);
 	void addNode(Node* node);
-	void updateDirection(EHexCellDirection direction, int q, int r, Node* node);
+	void updateDirection(EHexCellDirection direction, int q, int r, Node* node, const STileInfo* tiles, int nbTiles);
 	bool isNotWalled(coordinates coordinateNode1, coordinates coordinateNode2, EHexCellDirection direction);
+	void updateIdGraph(Node* node, int id);
+	void addNodeToGraph(Node* node, const STileInfo* tiles, int nbTiles);
+	void updateDirectionBis(EHexCellDirection direction, int q, int r, Node* node, const STileInfo* tiles, int nbTiles);
 
 	//conditions
 	bool isUsedByAnotherNPC(std::pair<Graph::coordinates, int> goal) { return goal.second != -1; };
-	bool hasSameGraphIndex(int indexGraphNPC, std::pair<Graph::coordinates, int> goal) { return indexGraphNPC == *(getNode(goal.first)->getIdGraph()); }
+	bool hasSameGraphIndex(int indexGraphNPC, std::pair<Graph::coordinates, int> goal) { return indexGraphNPC == getNode(goal.first)->getIdGraph(); }
 
 public:
 
@@ -67,12 +74,17 @@ public:
 
 	bool isNodeFinished(coordinates coord) { return _nodes[coord]->finished; }
 	void setFinished(coordinates coord) { _nodes[coord]->finished = true; }
-	
+
 	void addTimesExplored(coordinates coord) { ++_nodes[coord]->timesExplored; }
-	int getTimesExplored(coordinates coord) {return _nodes[coord]->timesExplored;};
-	
+	int getTimesExplored(coordinates coord) { return _nodes[coord]->timesExplored; };
+
 	std::string printGraph();
 
 	bool hasEnoughGoals(int nbNpc, SNPCInfo* npcInfo);
+
+	EHexCellDirection getBestDirectionExploration(coordinates coordNPC);
+
+	float getCoefAttraction(Node* node, int distance);
+	void clearCountedInAttraction();
 };
 
