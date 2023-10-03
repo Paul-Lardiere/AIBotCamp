@@ -68,10 +68,3 @@ for i,level in enumerate(levels):
         RepairReplayLog(replay_path)
     elif result == -2:
         print("Invalid Map Name [" + level + "]")
-    
-    if 'VERBOSE' in os.environ or True:
-        with open('.\\Replays\\' + replayfile + '\\MyBotLogic.log', 'r') as f:
-            print("====================== Logs =====================")
-            print(f.read())
-            print("======================/Logs/=====================")
-            print()
