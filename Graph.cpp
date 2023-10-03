@@ -27,7 +27,7 @@ void Graph::InitGraph(size_t nbTiles, const STileInfo* _tileList, SObjectInfo* o
 		node->initIdGraph(++_idGraphUnaffected);
 		node->timesExplored = 1;
 		addNode(node);
-		createGraph(node, _tileList, nbTiles);
+		createGraph(node);
 	}
 }
 
@@ -46,31 +46,31 @@ Graph::~Graph()
 /// fonction recursive de cration du graph
 /// </summary>
 /// <param name="node"></param>
-void Graph::createGraph(Node* node, const STileInfo* tiles, int nbTiles)
+void Graph::createGraph(Node* node)
 {
 	STileInfo tile = node->getTileInfo();
 
 	coordinates coord = coordinates{ tile.q, tile.r };
 
-	updateDirection(W, (tile.q), (tile.r) - 1, node, tiles, nbTiles);
-	updateDirection(NW, (tile.q) - 1, (tile.r), node, tiles, nbTiles);
-	updateDirection(NE, (tile.q) - 1, (tile.r) + 1, node, tiles, nbTiles);
-	updateDirection(E, (tile.q), (tile.r) + 1, node, tiles, nbTiles);
-	updateDirection(SE, (tile.q) + 1, (tile.r), node, tiles, nbTiles);
-	updateDirection(SW, (tile.q) + 1, (tile.r) - 1, node, tiles, nbTiles);
+	updateDirection(W, (tile.q), (tile.r) - 1, node);
+	updateDirection(NW, (tile.q) - 1, (tile.r), node);
+	updateDirection(NE, (tile.q) - 1, (tile.r) + 1, node);
+	updateDirection(E, (tile.q), (tile.r) + 1, node);
+	updateDirection(SE, (tile.q) + 1, (tile.r), node);
+	updateDirection(SW, (tile.q) + 1, (tile.r) - 1, node);
 }
 
 void Graph::updateGraph(size_t nbTiles, const STileInfo* _tileList, SObjectInfo* objectInfoArray, int objectInfoArraySize, SNPCInfo* npcInfoArray, int npcInfoArraySize)
 {
-	for (auto it = objectInfoArray + 0; it != objectInfoArray + objectInfoArraySize; ++it) // pour chaque objet
-		_objectInfoArray[std::pair<coordinates, EHexCellDirection>{coordinates{ it->q,it->r }, it->cellPosition}] = it; // on l'ajoute  la liste des objets fct(position, direction)
+	for (auto it = objectInfoArray + 0; it != objectInfoArray + objectInfoArraySize; ++it) // for each object
+		_objectInfoArray[std::pair<coordinates, EHexCellDirection>{coordinates{ it->q,it->r }, it->cellPosition}] = it; // add it to the object list
 
 	_objectInfoArraySize = objectInfoArraySize;
 
 	std::vector<STileInfo> newTiles{};
 	int nbNewTiles{};
 
-	std::for_each(_tileList, _tileList + nbTiles, [this, &newTiles, &nbNewTiles](auto&& initTileInfo) { // pour chaque tile qui n'est pas forbidden, l'ajouter ou rcrire dans la liste _initMap
+	std::for_each(_tileList, _tileList + nbTiles, [this, &newTiles, &nbNewTiles](auto&& initTileInfo) { // for each tile not forbidden, add it to the _initMap map
 		if ((initTileInfo.type != Forbidden && !exist(coordinates{ initTileInfo.q, initTileInfo.r })) || (initTileInfo.type == Goal))
 		{
 			_initMap[coordinates{ initTileInfo.q, initTileInfo.r }] = initTileInfo;
@@ -79,67 +79,64 @@ void Graph::updateGraph(size_t nbTiles, const STileInfo* _tileList, SObjectInfo*
 		}
 		});
 
+	// update the path of each new tiles
 	for (int i = 0; i != nbNewTiles; ++i)
 	{
 		coordinates coordTile = coordinates{ newTiles[i].q, newTiles[i].r };
 		Node* newNode = new Node(_initMap[coordTile]);
-		addNodeToGraph(newNode, _tileList, nbTiles);
+		addNodeToGraph(newNode);
 	}
 
-	for (auto it = _objectInfoArray.begin(); it != _objectInfoArray.end(); ++it) { // pour chaque objet
-		coordinates coordObj = coordinates{ it->second->q, it->second->r }; // rcuperer ses coordonnees
 
+	for (auto it = _objectInfoArray.begin(); it != _objectInfoArray.end(); ++it) { // for each object
+		coordinates coordObj = coordinates{ it->second->q, it->second->r }; // get his coordinate
+
+		// if their is a connection and a wall, then we erase the connection
 		if (isInitialized(coordObj)
 			&& (getNodes()[coordObj]->getAdjencyList().find(it->second->cellPosition) != getNodes()[coordObj]->getAdjencyList().end())
 			&& isInitialized(getNodes()[coordObj]->getNodeDirection(it->second->cellPosition)->getNodeCoordinates())
 			)
 		{
-			getNodes()[coordObj]->getNodeDirection(it->second->cellPosition)->getAdjencyList().erase(static_cast<EHexCellDirection>((it->second->cellPosition + 3) % 6)); // on supprime de la liste d'adjacence la node current si on trouve un mur entre les deux
-			getNodes()[coordObj]->getAdjencyList().erase(it->second->cellPosition); // on supprime la direction des nodes d'adjacence des la node current
-			getNode(coordObj)->initIdGraph(++_idGraphUnaffected); // on rinitialise le graph  partir de la node de direction avec un id plus grand // ici vient le probleme du graph avec un id de 70
+			getNodes()[coordObj]->getNodeDirection(it->second->cellPosition)->getAdjencyList().erase(static_cast<EHexCellDirection>((it->second->cellPosition + 3) % 6)); 
+			getNodes()[coordObj]->getAdjencyList().erase(it->second->cellPosition); 
+			getNode(coordObj)->initIdGraph(++_idGraphUnaffected); 
 		}
 	}
 
 
-	for (int i = 0; i < npcInfoArraySize; ++i) { // pour chaque npc
+	for (int i = 0; i < npcInfoArraySize; ++i) { // for each npc
 		coordinates coordNPC{ npcInfoArray[i].q,npcInfoArray[i].r };
-		updateIdGraph(_nodes[coordNPC], _nodes[coordNPC]->getIdGraph()); // on update l'id du graph
+		updateIdGraph(_nodes[coordNPC], _nodes[coordNPC]->getIdGraph()); // update the graph id
 	}
 
 	for (auto it = _nodes.begin(); it != _nodes.end(); ++it)
-		it->second->updated = false; // on dit que toutes les nodes ont t trait.
+		it->second->updated = false; // reset the nodes
 }
 
-void Graph::updateDirection(EHexCellDirection direction, int q, int r, Node* node, const STileInfo* tiles, int nbTiles)
+void Graph::updateDirection(EHexCellDirection direction, int q, int r, Node* node)
 {
 	if (exist(coordinates{ q,r }) && !node->inAdjacentList(allDirection[direction])) {
 
-		if (!isInitialized(coordinates{ q, r })) {
+		if (!isInitialized(coordinates{ q, r })) { // if not initialised, initialise and add to the graph
 			Node* newNode = new Node(_initMap[coordinates{ q, r }]);
-			//newNode->initIdGraph(++_idGraphUnaffected );
 			newNode->initIdGraph(node->getIdGraph());
 			addNode(newNode);
 
-
 			node->addToAdjencyList(allDirection[direction], newNode);
 			newNode->addToAdjencyList(allDirectionReversed[direction], node);
-
-
-			createGraph(newNode, tiles, nbTiles);
+			createGraph(newNode);
 		}
 		else {
-			// Ajout des nodes l'une  l'autre dans leur liste d'adjacence
+			// Add node to the two adjency list
 			Node* destNode = _nodes[coordinates{ q, r }];
 
 			node->addToAdjencyList(allDirection[direction], destNode);
 			destNode->addToAdjencyList(allDirectionReversed[direction], node);
 		}
-
 	}
-
 }
 
-void Graph::updateDirectionBis(EHexCellDirection direction, int q, int r, Node* node, const STileInfo* tiles, int nbTiles)
+void Graph::updateDirectionBis(EHexCellDirection direction, int q, int r, Node* node)
 {
 
 	if (exist(coordinates{ q,r }) && !node->inAdjacentList(allDirection[direction])) {
@@ -147,7 +144,6 @@ void Graph::updateDirectionBis(EHexCellDirection direction, int q, int r, Node* 
 
 		if (!isInitialized(coordinates{ q, r })) {
 			destNode = new Node(_initMap[coordinates{ q, r }]);
-			//newNode->initIdGraph(++_idGraphUnaffected );
 			destNode->initIdGraph(node->getIdGraph());
 			addNode(destNode);
 		}
@@ -204,19 +200,19 @@ void Graph::updateIdGraph(Node* node, int id)
 	}
 }
 
-void Graph::addNodeToGraph(Node* node, const STileInfo* tiles, int nbTiles)
+void Graph::addNodeToGraph(Node* node)
 {
 	addNode(node);
 	STileInfo tile = node->getTileInfo();
 
 	coordinates coord = coordinates{ tile.q, tile.r };
 
-	updateDirectionBis(W, (tile.q), (tile.r) - 1, node, tiles, nbTiles);
-	updateDirectionBis(NW, (tile.q) - 1, (tile.r), node, tiles, nbTiles);
-	updateDirectionBis(NE, (tile.q) - 1, (tile.r) + 1, node, tiles, nbTiles);
-	updateDirectionBis(E, (tile.q), (tile.r) + 1, node, tiles, nbTiles);
-	updateDirectionBis(SE, (tile.q) + 1, (tile.r), node, tiles, nbTiles);
-	updateDirectionBis(SW, (tile.q) + 1, (tile.r) - 1, node, tiles, nbTiles);
+	updateDirectionBis(W, (tile.q), (tile.r) - 1, node);
+	updateDirectionBis(NW, (tile.q) - 1, (tile.r), node);
+	updateDirectionBis(NE, (tile.q) - 1, (tile.r) + 1, node);
+	updateDirectionBis(E, (tile.q), (tile.r) + 1, node);
+	updateDirectionBis(SE, (tile.q) + 1, (tile.r), node);
+	updateDirectionBis(SW, (tile.q) + 1, (tile.r) - 1, node);
 }
 
 bool Graph::isInitialized(coordinates coordinates)

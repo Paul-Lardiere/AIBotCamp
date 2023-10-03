@@ -27,16 +27,16 @@ private:
 
 	Graph() = default;
 
-	void createGraph(Node* node, const STileInfo* tiles, int nbTiles);
+	void createGraph(Node* node);
 
 	bool exist(coordinates coordinates);
 	bool isInitialized(coordinates coordinates);
 	void addNode(Node* node);
-	void updateDirection(EHexCellDirection direction, int q, int r, Node* node, const STileInfo* tiles, int nbTiles);
+	void updateDirection(EHexCellDirection direction, int q, int r, Node* node);
 	bool isNotWalled(coordinates coordinateNode1, coordinates coordinateNode2, EHexCellDirection direction);
 	void updateIdGraph(Node* node, int id);
-	void addNodeToGraph(Node* node, const STileInfo* tiles, int nbTiles);
-	void updateDirectionBis(EHexCellDirection direction, int q, int r, Node* node, const STileInfo* tiles, int nbTiles);
+	void addNodeToGraph(Node* node);
+	void updateDirectionBis(EHexCellDirection direction, int q, int r, Node* node);
 
 	//conditions
 	bool isUsedByAnotherNPC(std::pair<Graph::coordinates, int> goal) { return goal.second != -1; };
